@@ -1,0 +1,7 @@
+{
+  "name": "KisanSetu - Direct Farmer-to-Consumer Network",
+  "description": "Empowering Indian farmers by eliminating middlemen intermediaries. Direct trade platform ensuring higher farmer profits, transparent mandi comparisons, and lower grocery prices for consumers.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

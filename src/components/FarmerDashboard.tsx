@@ -1,0 +1,216 @@
+import React from 'react';
+import { 
+  Sprout, 
+  TrendingUp, 
+  Package, 
+  Users, 
+  IndianRupee, 
+  Plus, 
+  Phone, 
+  CheckCircle2, 
+  Trash2, 
+  Clock,
+  Sparkles,
+  ShieldCheck
+} from 'lucide-react';
+import { CropListing, DirectOrder, LanguageCode } from '../types';
+import { translations } from '../data/translations';
+
+interface FarmerDashboardProps {
+  crops: CropListing[];
+  orders: DirectOrder[];
+  onOpenListingModal: () => void;
+  onDeleteCrop: (id: string) => void;
+  onOpenOrderModal: (crop: CropListing) => void;
+  language: LanguageCode;
+}
+
+export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
+  crops,
+  orders,
+  onOpenListingModal,
+  onDeleteCrop,
+  language,
+}) => {
+  const t = translations[language] || translations.en;
+
+  // Calculate statistics
+  const totalCropsCount = crops.length;
+  const totalStockKg = crops.reduce((acc, c) => acc + (c.unit === 'kg' ? c.quantityAvailable : c.quantityAvailable * 50), 0);
+  const totalOrdersCount = orders.length;
+  const totalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0);
+
+  // Extra profit estimated across all orders
+  const estimatedExtraProfit = Math.round(totalRevenue * 0.45);
+
+  return (
+    <div className="space-y-6">
+      {/* Top Banner with Stats - Vibrant Palette Theme */}
+      <div className="bg-white rounded-[36px] sm:rounded-[40px] p-6 sm:p-8 text-emerald-950 shadow-xl border-b-8 border-emerald-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border border-emerald-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              सरल किसान केंद्र (Farmer Empowerment Hub)
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-emerald-950">
+              नमस्ते किसान भाई! बिना बिचौलियों के सीधा व्यापार
+            </h1>
+            <p className="text-emerald-700 font-semibold text-xs sm:text-sm max-w-xl">
+              यहाँ आपकी फसल का पूरा भाव सीधे आपको मिलता है। कोई मंडी दलाली नहीं, कोई वजन की कटौती नहीं।
+            </p>
+          </div>
+
+          <button
+            id="dashboard-add-harvest-btn"
+            type="button"
+            onClick={onOpenListingModal}
+            className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black px-6 py-3.5 rounded-2xl text-sm sm:text-base shadow-lg border-b-4 border-amber-600 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-5 h-5 stroke-[3]" />
+            <span>नई फसल की बिक्री डालें (Add New Crop)</span>
+          </button>
+        </div>
+
+        {/* 4 Metric cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-6 border-t border-emerald-100">
+          <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+            <span className="text-[11px] text-emerald-700 font-bold block uppercase tracking-wider">
+              कुल सक्रिय फसलें (Listings)
+            </span>
+            <span className="text-2xl font-black text-emerald-950 mt-1 block">
+              {totalCropsCount}
+            </span>
+            <span className="text-[11px] text-emerald-600 font-semibold">सत्यापित खेत लॉट</span>
+          </div>
+
+          <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+            <span className="text-[11px] text-emerald-700 font-bold block uppercase tracking-wider">
+              कुल सीधी बिक्री (Direct Orders)
+            </span>
+            <span className="text-2xl font-black text-emerald-950 mt-1 block">
+              {totalOrdersCount}
+            </span>
+            <span className="text-[11px] text-emerald-600 font-semibold">घर व किराना खरीदार</span>
+          </div>
+
+          <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+            <span className="text-[11px] text-emerald-700 font-bold block uppercase tracking-wider">
+              सीधा प्राप्त भुगतान (Total Volume)
+            </span>
+            <span className="text-2xl font-black text-emerald-700 mt-1 block">
+              ₹{totalRevenue.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-emerald-600 font-semibold">100% Direct UPI / Cash</span>
+          </div>
+
+          <div className="bg-amber-400 text-amber-950 p-4 rounded-2xl shadow-md border-b-4 border-amber-600">
+            <span className="text-[11px] text-amber-950 font-bold block uppercase tracking-wider">
+              दलालों से बचाया शुद्ध लाभ
+            </span>
+            <span className="text-2xl font-black text-amber-950 mt-1 block">
+              +₹{estimatedExtraProfit.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-amber-900 font-black">+45% Extra Income</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Listings Table / Cards */}
+      <div className="bg-white rounded-[32px] p-6 sm:p-8 border-b-8 border-emerald-200 shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-black text-emerald-950">
+              आपकी लिस्ट की गई फसलें (Your Harvest Listings)
+            </h2>
+            <p className="text-xs text-emerald-700 font-semibold">
+              खरीदार सीधे इन फसलों को देखकर आर्डर या कॉल कर सकते हैं
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenListingModal}
+            className="text-xs font-black text-emerald-700 hover:text-emerald-900 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[3]" /> नई फसल जोड़ें
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {crops.map((crop) => {
+            const gainPerKg = crop.farmerPricePerUnit - crop.mandiApmcPricePerUnit;
+            const extraPercent = Math.round((gainPerKg / crop.mandiApmcPricePerUnit) * 100);
+
+            return (
+              <div
+                key={crop.id}
+                className="p-4 rounded-[28px] border-2 border-emerald-100 hover:border-emerald-300 transition-all bg-emerald-50/40 border-b-6 border-emerald-200 flex flex-col justify-between shadow-sm"
+              >
+                <div>
+                  <div className="flex items-start gap-3 mb-3">
+                    <img
+                      src={crop.imageUrl}
+                      alt={crop.cropName}
+                      referrerPolicy="no-referrer"
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-emerald-950 text-sm truncate">
+                        {crop.cropName}
+                      </h3>
+                      <p className="text-xs text-stone-500 font-medium">
+                        {crop.variety} • {crop.grade}
+                      </p>
+                      <span className="inline-block mt-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 border border-emerald-300">
+                        {crop.farmingType}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-2xl border border-emerald-200 text-xs space-y-1.5 mb-3 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-500 font-semibold">आपका सीधा भाव:</span>
+                      <strong className="text-emerald-700 font-black text-sm">
+                        ₹{crop.farmerPricePerUnit}/{crop.unit}
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-500 font-semibold">मंडी में आढ़तिया देता:</span>
+                      <span className="line-through text-rose-600 font-bold">
+                        ₹{crop.mandiApmcPricePerUnit}/{crop.unit}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-emerald-700 font-black">
+                      <span>अतिरिक्त लाभ:</span>
+                      <span>+{extraPercent}% (₹{gainPerKg}/{crop.unit})</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-stone-600 px-1 mb-2 font-medium">
+                    <span>उपलब्ध: <strong className="text-emerald-950 font-black">{crop.quantityAvailable} {crop.unit}</strong></span>
+                    <span>स्थान: <strong className="text-emerald-950 font-black">{crop.location.district}</strong></span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-emerald-100 flex items-center justify-between">
+                  <span className="text-[11px] text-stone-400 font-bold">
+                    ID: #{crop.id.slice(-6)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteCrop(crop.id)}
+                    className="text-rose-600 hover:text-rose-700 text-xs font-black flex items-center gap-1 p-1 cursor-pointer"
+                    title="Remove listing"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>हटाएं</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};

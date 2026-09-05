@@ -1,0 +1,245 @@
+import { LanguageCode } from '../types';
+
+export interface TranslationDict {
+  appName: string;
+  tagline: string;
+  taglineSub: string;
+  farmerTab: string;
+  buyerTab: string;
+  transparencyTab: string;
+  ordersTab: string;
+  listHarvestBtn: string;
+  voiceAssistance: string;
+  listening: string;
+  voiceHelpText: string;
+  filterAll: string;
+  vegetables: string;
+  grains: string;
+  fruits: string;
+  spices: string;
+  pulses: string;
+  apmcPrice: string;
+  directPrice: string;
+  retailPrice: string;
+  farmerGain: string;
+  consumerSaves: string;
+  buyDirectBtn: string;
+  callFarmerBtn: string;
+  chatFarmerBtn: string;
+  verifiedFarmer: string;
+  harvestedOn: string;
+  farmLocation: string;
+  minOrder: string;
+  availableQty: string;
+  howMiddlemenHurt: string;
+  middlemenTakeTitle: string;
+  directModelTitle: string;
+  calculateSavings: string;
+  cropLabel: string;
+  quantityLabel: string;
+  advisoryTitle: string;
+  advisoryDesc: string;
+}
+
+export const translations: Record<LanguageCode, TranslationDict> = {
+  en: {
+    appName: 'KisanSetu',
+    tagline: 'Eliminating Middlemen • Direct Farm-to-Consumer Network',
+    taglineSub: 'Traditional dalals take 50-65% of your food spend. We connect farmers directly with consumers & kiranas for fair earnings and lower prices.',
+    farmerTab: '🌾 Farmer Mode (किसान)',
+    buyerTab: '🛒 Buy Direct (सीधी खरीद)',
+    transparencyTab: '📊 Middlemen Price Radar (दलाल असर)',
+    ordersTab: '📦 Direct Orders (आर्डर)',
+    listHarvestBtn: '+ List Your Harvest (फसल बेचें)',
+    voiceAssistance: 'Audio Assistant',
+    listening: 'Listening...',
+    voiceHelpText: 'Click the speaker icon anytime to hear prices and instructions in your language',
+    filterAll: 'All Produce',
+    vegetables: 'Vegetables',
+    grains: 'Grains & Atta',
+    fruits: 'Fresh Fruits',
+    spices: 'Spices',
+    pulses: 'Pulses & Dal',
+    apmcPrice: 'APMC Mandi Rate',
+    directPrice: 'Farmer Direct Price',
+    retailPrice: 'City Retail Price',
+    farmerGain: 'Farmer Extra Profit',
+    consumerSaves: 'Consumer Savings',
+    buyDirectBtn: 'Order Directly from Farm',
+    callFarmerBtn: 'Call Farmer',
+    chatFarmerBtn: 'WhatsApp',
+    verifiedFarmer: 'Verified Indian Farmer',
+    harvestedOn: 'Harvest Date',
+    farmLocation: 'Farm Location',
+    minOrder: 'Min Order',
+    availableQty: 'Stock Available',
+    howMiddlemenHurt: 'How 5-7 Intermediary Layers Exploit Indian Farmers & Consumers',
+    middlemenTakeTitle: 'Traditional Mandi Route: Farmer gets only 28% of what consumer pays',
+    directModelTitle: 'KisanSetu Direct Route: Farmer gets 82%, consumer pays 25-35% less',
+    calculateSavings: 'Interactive Price & Profit Simulator',
+    cropLabel: 'Select Crop',
+    quantityLabel: 'Quantity',
+    advisoryTitle: 'Krishi Mitra AI Pricing Advisor',
+    advisoryDesc: 'Get government MSP and APMC mandi benchmarks to price your harvest fairly and avoid dalal traps.',
+  },
+  hi: {
+    appName: 'किसानसेतु',
+    tagline: 'बिचौलियों और दलालों का खात्मा • सीधा खेत से रसोई तक',
+    taglineSub: 'पारंपरिक मंडियों में 50-65% कमाई दलाल खा जाते हैं। किसानसेतु पर किसान सीधे उपभोक्ता और दुकानदार से जुड़ते हैं - किसान को ज्यादा मुनाफा, ग्राहक को कम दाम!',
+    farmerTab: '🌾 किसान मोड (फसल बेचें)',
+    buyerTab: '🛒 सीधी खरीद (सस्ता व ताजा)',
+    transparencyTab: '📊 दलाल मुनाफा मीटर',
+    ordersTab: '📦 आर्डर सूची (Orders)',
+    listHarvestBtn: '+ अपनी फसल की बिक्री डालें',
+    voiceAssistance: 'आवाज सहायक',
+    listening: 'सुन रहे हैं...',
+    voiceHelpText: 'कीमतें और निर्देश अपनी भाषा में सुनने के लिए स्पीकर बटन दबाएं',
+    filterAll: 'सभी फसलें',
+    vegetables: 'सब्जियां',
+    grains: 'अनाज व गेहूं',
+    fruits: 'ताजा फल',
+    spices: 'मसाले व मिर्च',
+    pulses: 'दालें',
+    apmcPrice: 'मंडी में आढ़तिया भाव',
+    directPrice: 'किसान का सीधा भाव',
+    retailPrice: 'शहर में दुकान का भाव',
+    farmerGain: 'किसान का अधिक लाभ',
+    consumerSaves: 'ग्राहक की बचत',
+    buyDirectBtn: 'सीधे किसान से खरीदें',
+    callFarmerBtn: 'किसान को कॉल करें',
+    chatFarmerBtn: 'व्हाट्सएप',
+    verifiedFarmer: 'सत्यापित किसान',
+    harvestedOn: 'कटाई की तारीख',
+    farmLocation: 'खेत का पता',
+    minOrder: 'न्यूनतम आर्डर',
+    availableQty: 'उपलब्ध मात्रा',
+    howMiddlemenHurt: 'जानिए कैसे 5-6 बिचौलिए किसान की मेहनत और ग्राहक की जेब काटते हैं',
+    middlemenTakeTitle: 'पारंपरिक मंडी: ग्राहक के ₹100 में से किसान को सिर्फ ₹28 मिलते हैं',
+    directModelTitle: 'किसानसेतु सीधा मॉडल: किसान को ₹82 मिलते हैं और ग्राहक को 30% सस्ता पड़ता है',
+    calculateSavings: 'लाइव बचत व मुनाफा कैलकुलेटर',
+    cropLabel: 'फसल चुनें',
+    quantityLabel: 'मात्रा (किग्रा/क्विंटल)',
+    advisoryTitle: 'कृषि मित्र - मंडी भाव सलाहकार',
+    advisoryDesc: 'दलालों के बहकावे से बचें! जानिए आपकी फसल का सही दाम क्या होना चाहिए।',
+  },
+  mr: {
+    appName: 'किसानसेतू',
+    tagline: 'दलालमुक्त शेती • थेट शेतातून ग्राहकाच्या दारात',
+    taglineSub: 'पारंपारिक मार्केट यार्डात ५०-६५% नफा मध्यस्थ लाटतात. शेतकरी ते थेट ग्राहक व्यवहाराने शेतकऱ्याला योग्य भाव आणि ग्राहकाला रास्त दर मिळतो.',
+    farmerTab: '🌾 शेतकरी विभाग',
+    buyerTab: '🛒 थेट खरेदी',
+    transparencyTab: '📊 दलालांचा नफा तपासा',
+    ordersTab: '📦 मागण्या (Orders)',
+    listHarvestBtn: '+ नवीन पीक विक्री नोंदवा',
+    voiceAssistance: 'ध्वनी सहाय्यक',
+    listening: 'ऐकत आहे...',
+    voiceHelpText: 'मराठीत माहिती ऐकण्यासाठी स्पीकर चिन्हावर क्लिक करा',
+    filterAll: 'सर्व पिके',
+    vegetables: 'भाज्या',
+    grains: 'धान्य',
+    fruits: 'ताजी फळे',
+    spices: 'मसाले',
+    pulses: 'डाळी',
+    apmcPrice: 'मार्केट यार्ड भाव',
+    directPrice: 'शेतकऱ्याचा थेट दर',
+    retailPrice: 'शहरातील किरकोळ दर',
+    farmerGain: 'शेतकऱ्याचा ज्यादा नफा',
+    consumerSaves: 'ग्राहकाची बचत',
+    buyDirectBtn: 'थेट शेतातून मागवा',
+    callFarmerBtn: 'शेतकऱ्याशी बोला',
+    chatFarmerBtn: 'व्हॉट्सअॅप',
+    verifiedFarmer: 'प्रमाणित शेतकरी',
+    harvestedOn: 'काढणी दिनांक',
+    farmLocation: 'गाव व जिल्हा',
+    minOrder: 'किमान मागणी',
+    availableQty: 'शिल्लक साठा',
+    howMiddlemenHurt: 'मध्यस्थ साखळीमुळे शेतकऱ्यांचे नुकसान आणि महागाई कशी वाढते?',
+    middlemenTakeTitle: 'पारंपारिक पद्धत: ग्राहकाच्या १०० रुपयातून शेतकऱ्याला फक्त २८ रुपये',
+    directModelTitle: 'किसानसेतू पद्धत: शेतकऱ्याला ८२ रुपये आणि ग्राहकाला २५-३५% स्वस्त',
+    calculateSavings: 'नफा व बचत गणकयंत्र',
+    cropLabel: 'पीक निवडा',
+    quantityLabel: 'प्रमाण',
+    advisoryTitle: 'कृषी मित्र सल्लागार',
+    advisoryDesc: 'दलालांच्या भूलथापांना बळी पडू नका. तुमच्या पिकाचा रास्त भाव येथे तपासा.',
+  },
+  pa: {
+    appName: 'ਕਿਸਾਨਸੇਤੂ',
+    tagline: 'ਦਲਾਲ ਮੁਕਤ ਮੰਡੀ • ਸਿੱਧਾ ਖੇਤਾਂ ਵਿੱਚੋਂ ਘਰ ਤੱਕ',
+    taglineSub: 'ਆੜ੍ਹਤੀਏ ਅਤੇ ਦਲਾਲ 50-65% ਹਿੱਸਾ ਖਾ ਜਾਂਦੇ ਹਨ। ਕਿਸਾਨਸੇਤੂ ਨਾਲ ਕਿਸਾਨਾਂ ਨੂੰ ਵੱਧ ਕਮਾਈ ਅਤੇ ਗਾਹਕਾਂ ਨੂੰ ਸਸਤੀਆਂ ਫ਼ਸਲਾਂ ਮਿਲਦੀਆਂ ਹਨ।',
+    farmerTab: '🌾 ਕਿਸਾਨ ਮੋਡ (ਵੇਚੋ)',
+    buyerTab: '🛒 ਸਿੱਧੀ ਖ਼ਰੀਦ',
+    transparencyTab: '📊 ਵਿਚੋਲਿਆਂ ਦਾ ਮੁਨਾਫ਼ਾ ਮੀਟਰ',
+    ordersTab: '📦 ਆਰਡਰ ਟ੍ਰੈਕਿੰਗ',
+    listHarvestBtn: '+ ਆਪਣੀ ਫ਼ਸਲ ਲਗਾਓ',
+    voiceAssistance: 'ਆਵਾਜ਼ ਸਹਾਇਕ',
+    listening: 'ਸੁਣ ਰਿਹਾ ਹੈ...',
+    voiceHelpText: 'ਕੀਮਤਾਂ ਸੁਣਨ ਲਈ ਸਪੀਕਰ ਬਟਨ ਦਬਾਓ',
+    filterAll: 'ਸਾਰੀਆਂ ਫ਼ਸਲਾਂ',
+    vegetables: 'ਸਬਜ਼ੀਆਂ',
+    grains: 'ਅਨਾਜ ਤੇ ਕਣਕ',
+    fruits: 'ਤਾਜ਼ੇ ਫ਼ਲ',
+    spices: 'ਮਸਾਲੇ',
+    pulses: 'ਦਾਲਾਂ',
+    apmcPrice: 'ਮੰਡੀ ਆੜ੍ਹਤ ਭਾਅ',
+    directPrice: 'ਕਿਸਾਨ ਦਾ ਸਿੱਧਾ ਭਾਅ',
+    retailPrice: 'ਸ਼ਹਿਰ ਦੀ ਦੁਕਾਨ ਦਾ ਭਾਅ',
+    farmerGain: 'ਕਿਸਾਨ ਦਾ ਵੱਧ ਲਾਭ',
+    consumerSaves: 'ਗਾਹਕ ਦੀ ਬੱਚਤ',
+    buyDirectBtn: 'ਸਿੱਧਾ ਖੇਤੋਂ ਖ਼ਰੀਦੋ',
+    callFarmerBtn: 'ਕਿਸਾਨ ਨੂੰ ਕਾਲ ਕਰੋ',
+    chatFarmerBtn: 'ਵ੍ਹਟਸਐਪ',
+    verifiedFarmer: 'ਤਸਦੀਕਸ਼ੁਦਾ ਕਿਸਾਨ',
+    harvestedOn: 'ਕਟਾਈ ਮਿਤੀ',
+    farmLocation: 'ਪਿੰਡ ਤੇ ਜ਼ਿਲ੍ਹਾ',
+    minOrder: 'ਘੱਟੋ-ਘੱਟ ਆਰਡਰ',
+    availableQty: 'ਮੌਜੂਦਾ ਸਟਾਕ',
+    howMiddlemenHurt: 'ਦੇਖੋ ਕਿਵੇਂ ਵਿਚੋਲੀਏ ਕਿਸਾਨ ਤੇ ਗਾਹਕ ਦੋਵਾਂ ਦਾ ਨੁਕਸਾਨ ਕਰਦੇ ਹਨ',
+    middlemenTakeTitle: 'ਰਵਾਇਤੀ ਮੰਡੀ: ਗਾਹਕ ਦੇ ₹100 ਵਿੱਚੋਂ ਕਿਸਾਨ ਨੂੰ ਸਿਰਫ਼ ₹28 ਮਿਲਦੇ ਹਨ',
+    directModelTitle: 'ਕਿਸਾਨਸੇਤੂ ਸਿੱਧਾ ਮਾਡਲ: ਕਿਸਾਨ ਨੂੰ ₹82 ਅਤੇ ਗਾਹਕ ਨੂੰ 30% ਸਸਤਾ',
+    calculateSavings: 'ਮੁਨਾਫ਼ਾ ਤੇ ਬੱਚਤ ਕੈਲਕੁਲੇਟਰ',
+    cropLabel: 'ਫ਼ਸਲ ਚੁਣੋ',
+    quantityLabel: 'ਮਾਤਰਾ',
+    advisoryTitle: 'ਕ੍ਰਿਸ਼ੀ ਮਿੱਤਰ ਸਲਾਹਕਾਰ',
+    advisoryDesc: 'ਸਰਕਾਰੀ MSP ਅਤੇ ਮੰਡੀ ਦੇ ਅਸਲ ਭਾਅ ਦੇਖੋ।',
+  },
+  te: {
+    appName: 'కిసాన్ సేతు',
+    tagline: 'దళారుల ప్రమేయం లేని మార్కెట్ • పొలం నుండి నేరుగా ఇంటికి',
+    taglineSub: 'మధ్యవర్తులు రైతుల ఆదాయాన్ని 50-65% దోచుకుంటారు. కిసాన్ సేతు ద్వారా రైతులకు అధిక లాభం, వినియోగదారులకు తక్కువ ధరలు.',
+    farmerTab: '🌾 రైతు విభాగం (అమ్మకం)',
+    buyerTab: '🛒 డైరెక్ట్ కొనుగోలు',
+    transparencyTab: '📊 దళారుల దోపిడీ నివేదిక',
+    ordersTab: '📦 ఆర్డర్లు',
+    listHarvestBtn: '+ పంట అమ్మకానికి నమోదు చేయండి',
+    voiceAssistance: 'వాయిస్ అసిస్టెంట్',
+    listening: 'వింటోంది...',
+    voiceHelpText: 'ధరలు వినడానికి స్పీకర్ గుర్తును నొక్కండి',
+    filterAll: 'అన్ని పంటలు',
+    vegetables: 'కూరగాయలు',
+    grains: 'ధాన్యాలు',
+    fruits: 'పండ్లు',
+    spices: 'మసాలాలు',
+    pulses: 'పప్పులు',
+    apmcPrice: 'మార్కెట్ యార్డ్ ధర',
+    directPrice: 'రైతు డైరెక్ట్ ధర',
+    retailPrice: 'నగర మార్కెట్ ధర',
+    farmerGain: 'రైతుకి అదనపు లాభం',
+    consumerSaves: 'వినియోగదారుడి ఆదా',
+    buyDirectBtn: 'రైతు వద్ద నుండి కొనండి',
+    callFarmerBtn: 'రైతుకి కాల్ చేయండి',
+    chatFarmerBtn: 'వాట్సాప్',
+    verifiedFarmer: 'ధృవీకరించబడిన రైతు',
+    harvestedOn: 'కోత తేదీ',
+    farmLocation: 'పొలం ప్రాంతం',
+    minOrder: 'కనిష్ట పరిమాణం',
+    availableQty: 'అందుబాటులో ఉన్న నిల్వ',
+    howMiddlemenHurt: 'మధ్యవర్తులు ఎలా రైతులను, వినియోగదారులను నష్టపరుస్తారో తెలుసుకోండి',
+    middlemenTakeTitle: 'సాంప్రదాయ మార్కెట్: వినియోగదారుడు చెల్లించే ₹100 లో రైతుకి కేవలం ₹28',
+    directModelTitle: 'కిసాన్ సేతు డైరెక్ట్: రైతుకి ₹82 మరియు వినియోగదారుడికి 25-35% ఆదా',
+    calculateSavings: 'లాభం మరియు ఆదా లెక్కింపు',
+    cropLabel: 'పంటను ఎంచుకోండి',
+    quantityLabel: 'పరిమాణం',
+    advisoryTitle: 'కృషి మిత్ర AI సలహాదారు',
+    advisoryDesc: 'దళారుల ఉచ్చులో పడకుండా సరసమైన ధర నిర్ణయించండి.',
+  }
+};
