@@ -1,7 +1,7 @@
 {
   "name": "KisanSetu - Direct Farmer-to-Consumer Network",
-  "description": "Empowering Indian farmers by eliminating middlemen intermediaries. Direct trade platform ensuring higher farmer profits, transparent mandi comparisons, and lower grocery prices for consumers.",
-  "requestFramePermissions": ["microphone"],
+  "description": "SIH26033: Direct Farmer-to-Merchant marketplace eliminating intermediaries. Features two-side AI product quality verification, merchant bidding, merchant-managed logistics, and fair-price estimation.",
+  "requestFramePermissions": ["microphone", "camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
 

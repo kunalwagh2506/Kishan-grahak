@@ -10,24 +10,17 @@ import {
   IndianRupee,
   Scale
 } from 'lucide-react';
-import { IntermediaryLayer, MandiComparison, LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { translations } from '../data/translations.js';
 
-interface IntermediaryExplainerProps {
-  layers: IntermediaryLayer[];
-  comparisons: MandiComparison[];
-  language: LanguageCode;
-}
-
-export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
+export function IntermediaryExplainer({
   layers,
   comparisons,
   language,
-}) => {
+}) {
   const t = translations[language] || translations.en;
   const [selectedCropIndex, setSelectedCropIndex] = useState(0);
   const [calcQuantity, setCalcQuantity] = useState(1000); // 1000 kg default
-  const [viewMode, setViewMode] = useState<'comparison' | 'layers' | 'rupeeFlow'>('rupeeFlow');
+  const [viewMode, setViewMode] = useState('rupeeFlow');
 
   const activeCrop = comparisons[selectedCropIndex] || comparisons[0];
 
@@ -61,7 +54,7 @@ export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('rupeeFlow')}
-              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all ${
+              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
                 viewMode === 'rupeeFlow'
                   ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                   : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-2 border-emerald-100'
@@ -74,7 +67,7 @@ export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('comparison')}
-              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all ${
+              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
                 viewMode === 'comparison'
                   ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                   : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-2 border-emerald-100'
@@ -87,7 +80,7 @@ export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('layers')}
-              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all ${
+              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
                 viewMode === 'layers'
                   ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                   : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-2 border-emerald-100'
@@ -274,7 +267,7 @@ export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
                 key={c.cropName}
                 type="button"
                 onClick={() => setSelectedCropIndex(idx)}
-                className={`px-4 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedCropIndex === idx
                     ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                     : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border-2 border-emerald-100'
@@ -473,4 +466,4 @@ export const IntermediaryExplainer: React.FC<IntermediaryExplainerProps> = ({
       )}
     </div>
   );
-};
+}

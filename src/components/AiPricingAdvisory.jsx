@@ -3,21 +3,13 @@ import {
   Sparkles, 
   IndianRupee, 
   TrendingUp, 
-  AlertTriangle, 
-  Lightbulb, 
   Volume2, 
   Loader2,
-  CheckCircle2,
-  HelpCircle
+  CheckCircle2
 } from 'lucide-react';
-import { LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { translations } from '../data/translations.js';
 
-interface AiPricingAdvisoryProps {
-  language: LanguageCode;
-}
-
-export const AiPricingAdvisory: React.FC<AiPricingAdvisoryProps> = ({ language }) => {
+export function AiPricingAdvisory({ language }) {
   const t = translations[language] || translations.en;
 
   const [cropName, setCropName] = useState('Red Onion (प्याज)');
@@ -27,16 +19,10 @@ export const AiPricingAdvisory: React.FC<AiPricingAdvisoryProps> = ({ language }
   const [currentOfferPrice, setCurrentOfferPrice] = useState(13);
 
   const [loading, setLoading] = useState(false);
-  const [advisoryResult, setAdvisoryResult] = useState<{
-    advice: string;
-    recommendedDirectPrice: number;
-    estimatedExtraEarnings: number;
-    source: string;
-  } | null>(null);
-
+  const [advisoryResult, setAdvisoryResult] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const fetchAdvisory = async (e?: React.FormEvent) => {
+  const fetchAdvisory = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
 
@@ -174,7 +160,7 @@ export const AiPricingAdvisory: React.FC<AiPricingAdvisoryProps> = ({ language }
             id="calculate-advisory-btn"
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>
@@ -208,7 +194,7 @@ export const AiPricingAdvisory: React.FC<AiPricingAdvisoryProps> = ({ language }
               <button
                 type="button"
                 onClick={speakAdvice}
-                className={`p-1.5 rounded-lg border text-xs font-bold flex items-center gap-1 transition-colors ${
+                className={`p-1.5 rounded-lg border text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
                   isSpeaking
                     ? 'bg-amber-400 text-emerald-950 border-amber-300 animate-pulse'
                     : 'bg-white text-emerald-900 border-stone-300 hover:bg-stone-50'
@@ -253,4 +239,4 @@ export const AiPricingAdvisory: React.FC<AiPricingAdvisoryProps> = ({ language }
       )}
     </div>
   );
-};
+}

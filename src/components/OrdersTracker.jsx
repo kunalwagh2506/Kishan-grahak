@@ -7,32 +7,24 @@ import {
   MapPin, 
   Phone, 
   IndianRupee, 
-  ShieldCheck, 
-  RefreshCw 
+  ShieldCheck 
 } from 'lucide-react';
-import { DirectOrder, LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { translations } from '../data/translations.js';
 
-interface OrdersTrackerProps {
-  orders: DirectOrder[];
-  onUpdateStatus: (orderId: string, status: DirectOrder['status']) => void;
-  language: LanguageCode;
-}
-
-export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
+export function OrdersTracker({
   orders,
   onUpdateStatus,
   language,
-}) => {
+}) {
   const t = translations[language] || translations.en;
-  const [filter, setFilter] = useState<'all' | 'confirmed' | 'dispatched' | 'delivered'>('all');
+  const [filter, setFilter] = useState('all');
 
   const filteredOrders = orders.filter((o) => {
     if (filter === 'all') return true;
     return o.status === filter;
   });
 
-  const getStatusBadge = (status: DirectOrder['status']) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case 'confirmed':
         return (
@@ -83,7 +75,7 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
           <button
             type="button"
             onClick={() => setFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
               filter === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-900 hover:text-emerald-950'
             }`}
           >
@@ -92,7 +84,7 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
           <button
             type="button"
             onClick={() => setFilter('confirmed')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
               filter === 'confirmed' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-900 hover:text-emerald-950'
             }`}
           >
@@ -101,7 +93,7 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
           <button
             type="button"
             onClick={() => setFilter('dispatched')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
               filter === 'dispatched' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-900 hover:text-emerald-950'
             }`}
           >
@@ -110,7 +102,7 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
           <button
             type="button"
             onClick={() => setFilter('delivered')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
               filter === 'delivered' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-900 hover:text-emerald-950'
             }`}
           >
@@ -208,7 +200,7 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
                 </div>
               </div>
 
-              {/* Status Update Actions (Simulating farmer/driver lifecycle update) */}
+              {/* Status Update Actions */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-emerald-100">
                 <div className="text-xs text-stone-500 flex items-center gap-1.5 font-medium">
                   <Truck className="w-3.5 h-3.5 text-emerald-700" />
@@ -247,4 +239,4 @@ export const OrdersTracker: React.FC<OrdersTrackerProps> = ({
       )}
     </div>
   );
-};
+}

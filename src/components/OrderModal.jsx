@@ -2,82 +2,71 @@ import React, { useState } from 'react';
 import { 
   X, 
   ShoppingBag, 
-  Truck, 
-  QrCode, 
-  Phone, 
-  MessageCircle, 
   Check, 
   TrendingDown, 
-  MapPin, 
-  ShieldCheck,
-  IndianRupee,
-  Users
+  Phone, 
+  MessageCircle, 
+  QrCode 
 } from 'lucide-react';
-import { CropListing, DirectOrder, LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { translations } from '../data/translations.js';
 
-interface OrderModalProps {
-  crop: CropListing | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmitOrder: (order: Partial<DirectOrder>) => void;
-  language: LanguageCode;
-}
-
-export const OrderModal: React.FC<OrderModalProps> = ({
-  crop,
+export function OrderModal({
   isOpen,
   onClose,
+  crop,
+  onPlaceOrder,
   onSubmitOrder,
   language,
-}) => {
+}) {
   const t = translations[language] || translations.en;
+  const submitOrderHandler = onPlaceOrder || onSubmitOrder;
 
-  if (!isOpen || !crop) return null;
-
-  const [quantity, setQuantity] = useState<number>(crop.minOrderQuantity || 10);
+  const [quantity, setQuantity] = useState(crop?.minOrderQuantity || 10);
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [buyerAddress, setBuyerAddress] = useState('');
-  const [buyerType, setBuyerType] = useState<DirectOrder['buyerType']>('Consumer (घर के लिए)');
-  const [deliveryType, setDeliveryType] = useState<DirectOrder['deliveryType']>('Direct Rural Express Delivery');
-  const [paymentMode, setPaymentMode] = useState<DirectOrder['paymentMode']>('Direct UPI to Farmer');
+  const [buyerType, setBuyerType] = useState('Consumer (घर के लिए)');
+  const [deliveryType, setDeliveryType] = useState('Direct Rural Express Delivery');
+  const [paymentMode, setPaymentMode] = useState('Direct UPI to Farmer');
   const [showUpiQr, setShowUpiQr] = useState(false);
+
+  if (!isOpen || !crop) return null;
 
   const totalAmount = quantity * crop.farmerPricePerUnit;
   const storeRetailCost = quantity * crop.retailMarketPricePerUnit;
-  const totalSaved = storeRetailCost - totalAmount;
+  const totalSaved = Math.max(0, storeRetailCost - totalAmount);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!buyerName || !buyerPhone) {
-      alert('कृपया अपना नाम और मोबाइल नंबर भरें।');
+      alert('कृपया अपना नाम और मोबाइल नंबर दर्ज करें।');
       return;
     }
 
-    onSubmitOrder({
-      cropId: crop.id,
-      cropName: crop.cropName,
-      farmerName: crop.farmerName,
-      farmerPhone: crop.farmerPhone,
-      buyerName,
-      buyerPhone,
-      buyerAddress: buyerAddress || 'City Address',
-      buyerType,
-      quantity,
-      unit: crop.unit,
-      unitPrice: crop.farmerPricePerUnit,
-      totalAmount,
-      deliveryType,
-      paymentMode,
-      status: 'confirmed',
-    });
+    if (submitOrderHandler) {
+      submitOrderHandler({
+        cropId: crop.id,
+        cropName: crop.cropName,
+        farmerName: crop.farmerName,
+        farmerPhone: crop.farmerPhone,
+        buyerName,
+        buyerPhone,
+        buyerAddress: buyerAddress || 'City Address',
+        buyerType,
+        quantity,
+        unit: crop.unit,
+        unitPrice: crop.farmerPricePerUnit,
+        totalAmount,
+        deliveryType,
+        paymentMode,
+        status: 'confirmed',
+      });
+    }
 
     onClose();
   };
 
   const cleanPhone = crop.farmerPhone.replace(/[^0-9]/g, '');
-  const upiPayUri = `upi://pay?pa=${encodeURIComponent(crop.upiId || 'kisan@upi')}&pn=${encodeURIComponent(crop.farmerName)}&am=${totalAmount}&cu=INR&tn=KisanSetu+Direct+Crop+Order`;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
@@ -100,7 +89,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-emerald-300 hover:text-white hover:bg-emerald-800 transition-colors"
+            className="p-2 rounded-full text-emerald-300 hover:text-white hover:bg-emerald-800 transition-colors cursor-pointer"
           >
             <X className="w-6 h-6" />
           </button>
@@ -149,7 +138,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(crop.minOrderQuantity, q - (crop.unit.includes('bag') ? 1 : 5)))}
-                className="w-11 h-11 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-lg border border-stone-300 flex items-center justify-center transition-colors"
+                className="w-11 h-11 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-lg border border-stone-300 flex items-center justify-center transition-colors cursor-pointer"
               >
                 -
               </button>
@@ -167,7 +156,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.min(crop.quantityAvailable, q + (crop.unit.includes('bag') ? 1 : 5)))}
-                className="w-11 h-11 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-lg border border-stone-300 flex items-center justify-center transition-colors"
+                className="w-11 h-11 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-lg border border-stone-300 flex items-center justify-center transition-colors cursor-pointer"
               >
                 +
               </button>
@@ -209,8 +198,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setBuyerType(item.id as DirectOrder['buyerType'])}
-                  className={`p-2 rounded-xl text-left font-semibold border transition-all ${
+                  onClick={() => setBuyerType(item.id)}
+                  className={`p-2 rounded-xl text-left font-semibold border transition-all cursor-pointer ${
                     buyerType === item.id
                       ? 'bg-emerald-800 text-white border-emerald-900 shadow-sm'
                       : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
@@ -278,8 +267,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <select
                 id="order-delivery-type"
                 value={deliveryType}
-                onChange={(e) => setDeliveryType(e.target.value as DirectOrder['deliveryType'])}
-                className="w-full px-2.5 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                onChange={(e) => setDeliveryType(e.target.value)}
+                className="w-full px-2.5 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
               >
                 <option value="Direct Rural Express Delivery">Direct Rural Express (सीधा टेम्पो)</option>
                 <option value="Farm Gate Pickup">Farm Gate Pickup (खेत से खुद उठाएं)</option>
@@ -294,8 +283,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
               <select
                 id="order-payment-mode"
                 value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value as DirectOrder['paymentMode'])}
-                className="w-full px-2.5 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                onChange={(e) => setPaymentMode(e.target.value)}
+                className="w-full px-2.5 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
               >
                 <option value="Direct UPI to Farmer">Direct UPI to Farmer (सीधा किसान के खाते में)</option>
                 <option value="Cash on Delivery">Cash on Delivery / Pickup (नकद)</option>
@@ -315,7 +304,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowUpiQr(!showUpiQr)}
-                  className="text-xs font-bold text-emerald-800 underline"
+                  className="text-xs font-bold text-emerald-800 underline cursor-pointer"
                 >
                   {showUpiQr ? 'Hide QR' : 'Show UPI QR'}
                 </button>
@@ -362,7 +351,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
             <button
               id="confirm-direct-order-btn"
               type="submit"
-              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black py-3.5 px-6 rounded-2xl text-base shadow-lg transition-all flex items-center justify-center gap-2"
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black py-3.5 px-6 rounded-2xl text-base shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Check className="w-5 h-5" />
               <span>सीधा आर्डर पुष्ट करें (Confirm Direct Order - ₹{totalAmount.toLocaleString('en-IN')})</span>
@@ -372,4 +361,4 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       </div>
     </div>
   );
-};
+}

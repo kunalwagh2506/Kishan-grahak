@@ -7,24 +7,15 @@ import {
   MessageCircle, 
   Volume2, 
   TrendingUp, 
-  Sparkles,
-  ShoppingBag,
-  Info
+  ShoppingBag
 } from 'lucide-react';
-import { CropListing, LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { translations } from '../data/translations.js';
 
-interface CropCardProps {
-  crop: CropListing;
-  language: LanguageCode;
-  onSelectCropForOrder: (crop: CropListing) => void;
-}
-
-export const CropCard: React.FC<CropCardProps> = ({
+export function CropCard({
   crop,
   language,
   onSelectCropForOrder,
-}) => {
+}) {
   const t = translations[language] || translations.en;
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
@@ -78,8 +69,7 @@ export const CropCard: React.FC<CropCardProps> = ({
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              // fallback image if broken
-              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
+              e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
             }}
           />
 
@@ -191,7 +181,7 @@ export const CropCard: React.FC<CropCardProps> = ({
           id={`buy-crop-${crop.id}`}
           type="button"
           onClick={() => onSelectCropForOrder(crop)}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-4 rounded-2xl text-sm transition-all shadow-md border-b-4 border-emerald-800 hover:scale-[0.99] active:scale-95 flex items-center justify-center gap-2"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-4 rounded-2xl text-sm transition-all shadow-md border-b-4 border-emerald-800 hover:scale-[0.99] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
         >
           <ShoppingBag className="w-4 h-4" />
           <span>{t.buyDirectBtn}</span>
@@ -222,4 +212,4 @@ export const CropCard: React.FC<CropCardProps> = ({
       </div>
     </div>
   );
-};
+}

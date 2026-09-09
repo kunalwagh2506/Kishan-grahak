@@ -1,55 +1,20 @@
-import { LanguageCode } from '../types';
-
-export interface TranslationDict {
-  appName: string;
-  tagline: string;
-  taglineSub: string;
-  farmerTab: string;
-  buyerTab: string;
-  transparencyTab: string;
-  ordersTab: string;
-  listHarvestBtn: string;
-  voiceAssistance: string;
-  listening: string;
-  voiceHelpText: string;
-  filterAll: string;
-  vegetables: string;
-  grains: string;
-  fruits: string;
-  spices: string;
-  pulses: string;
-  apmcPrice: string;
-  directPrice: string;
-  retailPrice: string;
-  farmerGain: string;
-  consumerSaves: string;
-  buyDirectBtn: string;
-  callFarmerBtn: string;
-  chatFarmerBtn: string;
-  verifiedFarmer: string;
-  harvestedOn: string;
-  farmLocation: string;
-  minOrder: string;
-  availableQty: string;
-  howMiddlemenHurt: string;
-  middlemenTakeTitle: string;
-  directModelTitle: string;
-  calculateSavings: string;
-  cropLabel: string;
-  quantityLabel: string;
-  advisoryTitle: string;
-  advisoryDesc: string;
-}
-
-export const translations: Record<LanguageCode, TranslationDict> = {
+export const translations = {
   en: {
     appName: 'KisanSetu',
     tagline: 'Eliminating Middlemen • Direct Farm-to-Consumer Network',
     taglineSub: 'Traditional dalals take 50-65% of your food spend. We connect farmers directly with consumers & kiranas for fair earnings and lower prices.',
-    farmerTab: '🌾 Farmer Mode (किसान)',
-    buyerTab: '🛒 Buy Direct (सीधी खरीद)',
+    farmerTab: '🌾 Farmer Portal (किसान)',
+    merchantTab: '🏪 Merchant Portal (व्यापारी)',
+    buyerTab: '🛒 Direct Produce Catalog',
     transparencyTab: '📊 Middlemen Price Radar (दलाल असर)',
     ordersTab: '📦 Direct Orders (आर्डर)',
+    offersTab: '🤝 Merchant Offers & Bids',
+    makeOfferBtn: 'Make Purchase Offer',
+    merchantOffersTitle: 'Live Merchant Offers & Multi-Bid System',
+    smartMatchLabel: '⭐ Smart Match Recommendation',
+    twoSideAiVerifyTitle: 'Two-Side AI Product Quality Verification',
+    transportResponsibilityLabel: 'Transport Managed by Merchant (0% Farmer Cost)',
+    releasePaymentBtn: 'Release Direct Payment to Farmer',
     listHarvestBtn: '+ List Your Harvest (फसल बेचें)',
     voiceAssistance: 'Audio Assistant',
     listening: 'Listening...',
@@ -86,10 +51,18 @@ export const translations: Record<LanguageCode, TranslationDict> = {
     appName: 'किसानसेतु',
     tagline: 'बिचौलियों और दलालों का खात्मा • सीधा खेत से रसोई तक',
     taglineSub: 'पारंपरिक मंडियों में 50-65% कमाई दलाल खा जाते हैं। किसानसेतु पर किसान सीधे उपभोक्ता और दुकानदार से जुड़ते हैं - किसान को ज्यादा मुनाफा, ग्राहक को कम दाम!',
-    farmerTab: '🌾 किसान मोड (फसल बेचें)',
-    buyerTab: '🛒 सीधी खरीद (सस्ता व ताजा)',
+    farmerTab: '🌾 किसान पोर्टल (Farmer)',
+    merchantTab: '🏪 व्यापारी पोर्टल (Merchant)',
+    buyerTab: '🛒 सीधी खरीद (फसलें)',
     transparencyTab: '📊 दलाल मुनाफा मीटर',
     ordersTab: '📦 आर्डर सूची (Orders)',
+    offersTab: '🤝 व्यापारी ऑफर्स व बोलियां',
+    makeOfferBtn: 'खरीद ऑफर भेजें (Offer)',
+    merchantOffersTitle: 'लाइव व्यापारी बोलियां व प्रतिस्पर्धी ऑफर्स',
+    smartMatchLabel: '⭐ सर्वोत्तम मैच (Smart Match)',
+    twoSideAiVerifyTitle: 'दो-तरफा AI गुणवत्ता व उत्पाद सत्यापन',
+    transportResponsibilityLabel: 'परिवहन व्यापारी की जिम्मेदारी (किसान का ₹0 खर्च)',
+    releasePaymentBtn: 'सत्यापन पश्चात किसान को तुरंत भुगतान जारी करें',
     listHarvestBtn: '+ अपनी फसल की बिक्री डालें',
     voiceAssistance: 'आवाज सहायक',
     listening: 'सुन रहे हैं...',
@@ -126,10 +99,18 @@ export const translations: Record<LanguageCode, TranslationDict> = {
     appName: 'किसानसेतू',
     tagline: 'दलालमुक्त शेती • थेट शेतातून ग्राहकाच्या दारात',
     taglineSub: 'पारंपारिक मार्केट यार्डात ५०-६५% नफा मध्यस्थ लाटतात. शेतकरी ते थेट ग्राहक व्यवहाराने शेतकऱ्याला योग्य भाव आणि ग्राहकाला रास्त दर मिळतो.',
-    farmerTab: '🌾 शेतकरी विभाग',
-    buyerTab: '🛒 थेट खरेदी',
+    farmerTab: '🌾 शेतकरी पोर्टल (Farmer)',
+    merchantTab: '🏪 व्यापारी पोर्टल (Merchant)',
+    buyerTab: '🛒 थेट खरेदी (पिके)',
     transparencyTab: '📊 दलालांचा नफा तपासा',
     ordersTab: '📦 मागण्या (Orders)',
+    offersTab: '🤝 व्यापारी ऑफर्स व लिलाव',
+    makeOfferBtn: 'खरेदी ऑफर पाठवा',
+    merchantOffersTitle: 'थेट व्यापारी बोल्या व खरेदी ऑफर्स',
+    smartMatchLabel: '⭐ सर्वोत्तम निवड (Smart Match)',
+    twoSideAiVerifyTitle: 'दोन-बाजू AI गुणवत्ता पडताळणी',
+    transportResponsibilityLabel: 'वाहतूक व्यापाऱ्याची जबाबदारी (शेतकऱ्याला ० खर्च)',
+    releasePaymentBtn: 'पडताळणीनंतर थेट शेतकऱ्याला पैसे जमा करा',
     listHarvestBtn: '+ नवीन पीक विक्री नोंदवा',
     voiceAssistance: 'ध्वनी सहाय्यक',
     listening: 'ऐकत आहे...',

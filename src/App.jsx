@@ -1,45 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   MapPin, 
-  Sparkles, 
   Sprout, 
-  ShoppingBag, 
-  CheckCircle2, 
-  ArrowRight,
-  TrendingUp,
-  Percent,
-  RefreshCw,
-  PhoneCall,
-  ShieldCheck,
-  Package
+  CheckCircle2 
 } from 'lucide-react';
-import { 
-  CropListing, 
-  DirectOrder, 
-  MandiComparison, 
-  IntermediaryLayer, 
-  LanguageCode 
-} from './types';
-import { translations } from './data/translations';
-import { Navbar } from './components/Navbar';
-import { CropCard } from './components/CropCard';
-import { IntermediaryExplainer } from './components/IntermediaryExplainer';
-import { FarmerListingModal } from './components/FarmerListingModal';
-import { OrderModal } from './components/OrderModal';
-import { OrdersTracker } from './components/OrdersTracker';
-import { FarmerDashboard } from './components/FarmerDashboard';
-import { AiPricingAdvisory } from './components/AiPricingAdvisory';
+import { translations } from './data/translations.js';
+import { Navbar } from './components/Navbar.jsx';
+import { CropCard } from './components/CropCard.jsx';
+import { IntermediaryExplainer } from './components/IntermediaryExplainer.jsx';
+import { FarmerListingModal } from './components/FarmerListingModal.jsx';
+import { OrderModal } from './components/OrderModal.jsx';
+import { OrdersTracker } from './components/OrdersTracker.jsx';
+import { FarmerDashboard } from './components/FarmerDashboard.jsx';
+import { AiPricingAdvisory } from './components/AiPricingAdvisory.jsx';
+import { MerchantPortal } from './components/MerchantPortal.jsx';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'buyer' | 'farmer' | 'transparency' | 'orders' | 'advisor'>('buyer');
-  const [language, setLanguage] = useState<LanguageCode>('hi'); // Default to Hindi for Indian farmers
+  const [currentTab, setCurrentTab] = useState('buyer');
+  const [language, setLanguage] = useState('hi'); // Default to Hindi for Indian farmers
 
-  const [crops, setCrops] = useState<CropListing[]>([]);
-  const [orders, setOrders] = useState<DirectOrder[]>([]);
-  const [mandiRates, setMandiRates] = useState<MandiComparison[]>([]);
-  const [layers, setLayers] = useState<IntermediaryLayer[]>([]);
+  const [crops, setCrops] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [offers, setOffers] = useState([]);
+  const [mandiRates, setMandiRates] = useState([]);
+  const [layers, setLayers] = useState([]);
+
+  const [merchantInfo, setMerchantInfo] = useState({
+    id: 'mer-1',
+    name: 'Nashik Agro-Fresh Wholesale Mart',
+    owner: 'Suresh Patil & Sons',
+    phone: '+91 98221 44556',
+    location: 'APMC Market Yard, Nashik, Maharashtra',
+    fleetType: 'Mini Truck Fleet (1-3 Ton)'
+  });
 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,12 +41,12 @@ export default function App() {
   const [selectedState, setSelectedState] = useState('All');
 
   const [isListingModalOpen, setIsListingModalOpen] = useState(false);
-  const [orderTargetCrop, setOrderTargetCrop] = useState<CropListing | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [orderTargetCrop, setOrderTargetCrop] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   const t = translations[language] || translations.en;
 
-  const showToast = (msg: string) => {
+  const showToast = (msg) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
   };
@@ -61,11 +55,12 @@ export default function App() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [cropsRes, ordersRes, mandiRes, breakdownRes] = await Promise.all([
+      const [cropsRes, ordersRes, mandiRes, breakdownRes, offersRes] = await Promise.all([
         fetch('/api/crops'),
         fetch('/api/orders'),
         fetch('/api/mandi-rates'),
         fetch('/api/intermediary-breakdown'),
+        fetch('/api/offers'),
       ]);
 
       if (cropsRes.ok) {
@@ -75,6 +70,10 @@ export default function App() {
       if (ordersRes.ok) {
         const data = await ordersRes.json();
         setOrders(data);
+      }
+      if (offersRes && offersRes.ok) {
+        const data = await offersRes.json();
+        setOffers(data);
       }
       if (mandiRes.ok) {
         const data = await mandiRes.json();
@@ -95,6 +94,139 @@ export default function App() {
     loadData();
   }, []);
 
+  // Handle submitting merchant offer
+  const handleSubmitOffer = async (offerPayload) => {
+    try {
+      const res = await fetch('/api/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offerPayload),
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        setOffers((prev) => [created, ...prev]);
+        showToast('व्यापारी खरीद प्रस्ताव किसान को सफलतापूर्वक भेजा गया!');
+        return created;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('ऑफर भेजने में त्रुटि हुई।');
+    }
+  };
+
+  // Handle farmer accepting offer
+  const handleAcceptOffer = async (offerId) => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/accept`, {
+        method: 'PATCH',
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOffers((prev) => prev.map((o) => (o.id === offerId ? updated : o)));
+        showToast('ऑफर स्वीकार किया गया! व्यापारी का वाहन माल उठाने के लिए रवाना होगा।');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle farmer rejecting offer
+  const handleRejectOffer = async (offerId) => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/reject`, {
+        method: 'PATCH',
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOffers((prev) => prev.map((o) => (o.id === offerId ? updated : o)));
+        showToast('ऑफर अस्वीकार किया गया।');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle updating transport
+  const handleUpdateTransport = async (offerId, transportPayload) => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/transport`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transportPayload),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOffers((prev) => prev.map((o) => (o.id === offerId ? updated : o)));
+        showToast('परिवहन जानकारी अपडेट की गई।');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle AI two-side verification image
+  const handleVerifyOfferImage = async (offerId, merchantImageUrl) => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/verify-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchantImageUrl: !merchantImageUrl.startsWith('data:image') ? merchantImageUrl : null,
+          merchantImageBase64: merchantImageUrl.startsWith('data:image') ? merchantImageUrl : null,
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setOffers((prev) =>
+          prev.map((o) =>
+            o.id === offerId
+              ? {
+                  ...o,
+                  twoSideVerification: result.verification,
+                  transportStatus: 'verified_at_destination',
+                }
+              : o
+          )
+        );
+        showToast('दो-तरफा AI गुणवत्ता सत्यापन संपन्न! अब आप किसान को भुगतान जारी कर सकते हैं।');
+        return result.verification;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('AI सत्यापन में त्रुटि हुई।');
+    }
+  };
+
+  // Handle releasing payment
+  const handleReleaseOfferPayment = async (offerId) => {
+    try {
+      const res = await fetch(`/api/offers/${offerId}/release-payment`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setOffers((prev) =>
+          prev.map((o) =>
+            o.id === offerId
+              ? {
+                  ...o,
+                  paymentStatus: 'released_to_farmer',
+                  transportStatus: 'delivered',
+                  payoutRef: result.payoutRef,
+                }
+              : o
+          )
+        );
+        showToast(`सीधा UPI भुगतान सफल! किसान को ₹${result.amount.toLocaleString('en-IN')} ट्रांसफर कर दिया गया।`);
+        return result;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('भुगतान जारी करने में त्रुटि हुई।');
+    }
+  };
+
   // Filter crops for buyer view
   const filteredCrops = crops.filter((crop) => {
     const matchesSearch = 
@@ -111,7 +243,7 @@ export default function App() {
   });
 
   // Handle adding new crop
-  const handleAddCrop = async (newCropData: Partial<CropListing>) => {
+  const handleAddCrop = async (newCropData) => {
     try {
       const res = await fetch('/api/crops', {
         method: 'POST',
@@ -131,7 +263,7 @@ export default function App() {
   };
 
   // Handle deleting a crop
-  const handleDeleteCrop = async (id: string) => {
+  const handleDeleteCrop = async (id) => {
     try {
       await fetch(`/api/crops/${id}`, { method: 'DELETE' });
       setCrops((prev) => prev.filter((c) => c.id !== id));
@@ -142,7 +274,7 @@ export default function App() {
   };
 
   // Handle submitting order
-  const handleSubmitOrder = async (orderData: Partial<DirectOrder>) => {
+  const handleSubmitOrder = async (orderData) => {
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -171,7 +303,7 @@ export default function App() {
   };
 
   // Handle updating order status
-  const handleUpdateOrderStatus = async (orderId: string, status: DirectOrder['status']) => {
+  const handleUpdateOrderStatus = async (orderId, status) => {
     try {
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
@@ -220,6 +352,7 @@ export default function App() {
         onSelectLanguage={setLanguage}
         onOpenListingModal={() => setIsListingModalOpen(true)}
         orderCount={orders.length}
+        offersCount={offers.length}
       />
 
       {/* Main Container */}
@@ -331,7 +464,7 @@ export default function App() {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-4 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+                    className={`px-4 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
                       selectedCategory === cat.id
                         ? 'bg-emerald-600 text-white shadow-md border-b-2 border-emerald-800'
                         : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border border-emerald-100'
@@ -381,9 +514,27 @@ export default function App() {
           <FarmerDashboard
             crops={crops}
             orders={orders}
+            offers={offers}
+            onAcceptOffer={handleAcceptOffer}
+            onRejectOffer={handleRejectOffer}
             onOpenListingModal={() => setIsListingModalOpen(true)}
             onDeleteCrop={handleDeleteCrop}
             onOpenOrderModal={(c) => setOrderTargetCrop(c)}
+            language={language}
+          />
+        )}
+
+        {/* MERCHANT DIRECT PROCUREMENT PORTAL (SIH26033) */}
+        {currentTab === 'merchant' && (
+          <MerchantPortal
+            crops={crops}
+            offers={offers}
+            merchantInfo={merchantInfo}
+            onUpdateMerchantInfo={setMerchantInfo}
+            onSubmitOffer={handleSubmitOffer}
+            onUpdateTransport={handleUpdateTransport}
+            onVerifyImage={handleVerifyOfferImage}
+            onReleasePayment={handleReleaseOfferPayment}
             language={language}
           />
         )}

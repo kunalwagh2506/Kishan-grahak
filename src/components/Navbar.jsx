@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
-import { Sprout, ShoppingBag, BarChart3, Package, Sparkles, Volume2, Globe, PhoneCall } from 'lucide-react';
-import { LanguageCode } from '../types';
-import { translations } from '../data/translations';
+import { Sprout, ShoppingBag, BarChart3, Package, Sparkles, Volume2, Globe, PhoneCall, Store, Truck } from 'lucide-react';
+import { translations } from '../data/translations.js';
 
-interface NavbarProps {
-  currentTab: 'farmer' | 'buyer' | 'transparency' | 'orders' | 'advisor';
-  onSelectTab: (tab: 'farmer' | 'buyer' | 'transparency' | 'orders' | 'advisor') => void;
-  language: LanguageCode;
-  onSelectLanguage: (lang: LanguageCode) => void;
-  onOpenListingModal: () => void;
-  orderCount: number;
-}
-
-export const Navbar: React.FC<NavbarProps> = ({
+export function Navbar({
   currentTab,
   onSelectTab,
   language,
   onSelectLanguage,
   onOpenListingModal,
   orderCount,
-}) => {
+  offersCount = 0,
+}) {
   const t = translations[language] || translations.en;
   const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -107,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={speakWelcome}
               title={t.voiceHelpText}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border-2 transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border-2 transition-all cursor-pointer ${
                 isSpeaking
                   ? 'bg-amber-400 text-amber-950 border-amber-500 animate-pulse shadow'
                   : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
@@ -123,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <select
                 id="language-select"
                 value={language}
-                onChange={(e) => onSelectLanguage(e.target.value as LanguageCode)}
+                onChange={(e) => onSelectLanguage(e.target.value)}
                 className="bg-transparent text-emerald-900 text-xs font-bold focus:outline-none pr-1 cursor-pointer"
               >
                 <option value="hi">हिन्दी</option>
@@ -139,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="farmer-list-harvest-btn"
               type="button"
               onClick={onOpenListingModal}
-              className="bg-amber-400 hover:bg-amber-300 text-amber-950 font-black px-4 py-2 rounded-2xl text-sm shadow-md border-b-4 border-amber-600 active:scale-95 transition-all flex items-center gap-1.5"
+              className="bg-amber-400 hover:bg-amber-300 text-amber-950 font-black px-4 py-2 rounded-2xl text-sm shadow-md border-b-4 border-amber-600 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span className="text-lg leading-none">+</span>
               <span className="hidden sm:inline">{t.listHarvestBtn}</span>
@@ -159,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="tab-buyer"
             type="button"
             onClick={() => onSelectTab('buyer')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'buyer'
                 ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                 : 'text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-100/70'
@@ -173,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="tab-transparency"
             type="button"
             onClick={() => onSelectTab('transparency')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'transparency'
                 ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                 : 'text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-100/70'
@@ -187,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="tab-farmer"
             type="button"
             onClick={() => onSelectTab('farmer')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'farmer'
                 ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                 : 'text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-100/70'
@@ -198,10 +189,31 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
+            id="tab-merchant"
+            type="button"
+            onClick={() => onSelectTab('merchant')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
+              currentTab === 'merchant'
+                ? 'bg-amber-500 text-amber-950 shadow-md border-b-4 border-amber-700'
+                : 'text-amber-950/85 hover:text-amber-950 hover:bg-amber-100/70'
+            }`}
+          >
+            <Store className="w-4 h-4 text-amber-900" />
+            <span>{t.merchantTab || 'व्यापारी केंद्र (Merchant)'}</span>
+            {offersCount > 0 && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-black ${
+                currentTab === 'merchant' ? 'bg-amber-950 text-amber-300' : 'bg-amber-300 text-amber-950'
+              }`}>
+                {offersCount}
+              </span>
+            )}
+          </button>
+
+          <button
             id="tab-advisor"
             type="button"
             onClick={() => onSelectTab('advisor')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'advisor'
                 ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                 : 'text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-100/70'
@@ -215,7 +227,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="tab-orders"
             type="button"
             onClick={() => onSelectTab('orders')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer ${
               currentTab === 'orders'
                 ? 'bg-emerald-600 text-white shadow-md border-b-4 border-emerald-800'
                 : 'text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-100/70'
@@ -235,4 +247,4 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
     </header>
   );
-};
+}
