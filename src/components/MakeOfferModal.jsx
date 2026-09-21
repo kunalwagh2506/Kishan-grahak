@@ -36,10 +36,14 @@ export function MakeOfferModal({
   const [driverName, setDriverName] = useState('Raju Gavit');
   const [driverPhone, setDriverPhone] = useState('+91 98230 45612');
   const [pickupTime, setPickupTime] = useState('09:30 AM');
+  const [fulfillmentType, setFulfillmentType] = useState('pickup');
+  const [deliveryPlace, setDeliveryPlace] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const [notes, setNotes] = useState('Direct procurement for wholesale retail distribution. Immediate settlement upon visual AI verification.');
   const [submitting, setSubmitting] = useState(false);
 
-  const totalAmount = Number(offeredPrice) * Number(quantity);
+  const productAmount = Number(offeredPrice) * Number(quantity);
+  const payableTotal = productAmount + (fulfillmentType === 'delivery' ? Number(deliveryFee) : 0);
   const priceDiff = Number(offeredPrice) - crop.farmerPricePerUnit;
 
   const handleSubmit = async (e) => {
@@ -63,7 +67,10 @@ export function MakeOfferModal({
         driverName,
         driverPhone,
         pickupTime,
-        pickupLocation: `${crop.location.village}, ${crop.location.district}`
+        pickupLocation: `${crop.location.village}, ${crop.location.district}`,
+        fulfillmentType,
+        deliveryPlace: fulfillmentType === 'delivery' ? deliveryPlace.trim() : '',
+        deliveryFee: fulfillmentType === 'delivery' ? Number(deliveryFee) : 0,
       });
       onClose();
     } catch (err) {
@@ -186,7 +193,7 @@ export function MakeOfferModal({
             </div>
           </div>
 
-          {/* Transport Arrangement Section (Crucial requirement: Transport is handled by merchant) */}
+          {/* Fulfillment choice and transport details */}
           <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-300 space-y-3">
             <div className="flex items-center gap-2">
               <Truck className="w-5 h-5 text-amber-700" />
@@ -194,11 +201,31 @@ export function MakeOfferModal({
                 <h4 className="text-xs sm:text-sm font-black text-amber-950">
                   परिवहन व्यापारी द्वारा (Transport Arranged by Merchant)
                 </h4>
-                <p className="text-[11px] text-amber-800 font-semibold">
-                  किसान से माल उठाने (Pickup) का खर्च व वाहन पूरी तरह व्यापारी की जिम्मेदारी है।
-                </p>
+                <p className="text-[11px] text-amber-800 font-semibold">खरीद का तरीका चुनें। डिलीवरी चुनने पर जगह और डिलीवरी शुल्क दर्ज करें।</p>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setFulfillmentType('pickup')} className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${fulfillmentType === 'pickup' ? 'bg-emerald-600 text-white border-emerald-800' : 'bg-white text-amber-950 border-amber-200'}`}>
+                Farm pickup
+              </button>
+              <button type="button" onClick={() => setFulfillmentType('delivery')} className={`rounded-xl border-2 px-3 py-2 text-xs font-black ${fulfillmentType === 'delivery' ? 'bg-emerald-600 text-white border-emerald-800' : 'bg-white text-amber-950 border-amber-200'}`}>
+                Delivery to my place
+              </button>
+            </div>
+
+            {fulfillmentType === 'delivery' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <label className="text-[11px] font-bold text-amber-950 sm:col-span-2">
+                  डिलीवरी जगह / place name *
+                  <input required value={deliveryPlace} onChange={(e) => setDeliveryPlace(e.target.value)} placeholder="Shop, warehouse or delivery place" className="mt-1 w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-amber-950 focus:outline-none" />
+                </label>
+                <label className="text-[11px] font-bold text-amber-950">
+                  Delivery fee (₹) *
+                  <input required type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="mt-1 w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-amber-950 focus:outline-none" />
+                </label>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <div>
@@ -282,7 +309,10 @@ export function MakeOfferModal({
                 कुल खरीद राशि (Total Deal Amount)
               </span>
               <span className="text-2xl font-black text-amber-300">
-                ₹{totalAmount.toLocaleString('en-IN')}
+                ₹{payableTotal.toLocaleString('en-IN')}
+              </span>
+              <span className="text-[11px] text-emerald-200 block mt-1">
+                Produce ₹{productAmount.toLocaleString('en-IN')} {fulfillmentType === 'delivery' && `+ delivery ₹${Number(deliveryFee).toLocaleString('en-IN')}`}
               </span>
             </div>
             <div className="text-right">

@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import net from 'node:net';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -7,7 +8,14 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const DEFAULT_PORT = Number(process.env.PORT) || 3000;
+
+const findAvailablePort = (startPort: number): Promise<number> => new Promise((resolve) => {
+  const probe = net.createServer();
+  probe.once('error', () => resolve(findAvailablePort(startPort + 1)));
+  probe.once('listening', () => probe.close(() => resolve(startPort)));
+  probe.listen(startPort, '0.0.0.0');
+});
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -211,6 +219,25 @@ let cropListings = [
   }
 ];
 
+function getShelfLifeDays(crop) {
+  const text = `${crop.cropName || ''} ${crop.cropNameHindi || ''} ${crop.category || ''}`.toLowerCase();
+  if (/tomato|टमाटर/.test(text)) return 3;
+  if (/leafy|spinach|पालक|मेथी|coriander|धनिया/.test(text)) return 2;
+  if (/mango|आम|banana|केला|papaya|पपीता/.test(text)) return 5;
+  if (/potato|आलू|carrot|गाजर/.test(text)) return 14;
+  if (/onion|प्याज|garlic|लहसुन/.test(text)) return 21;
+  if (/wheat|गेहूं|rice|चावल|pulse|dal|दाल/.test(text)) return 90;
+  if (/chilli|मिर्च|spice|मसाला/.test(text)) return 60;
+  return 7;
+}
+
+function addLifecycleData(crop) {
+  const shelfLifeDays = Number(crop.shelfLifeDays) || getShelfLifeDays(crop);
+  const baseDate = new Date(`${crop.harvestDate || crop.createdAt || new Date().toISOString().split('T')[0]}T00:00:00`);
+  baseDate.setDate(baseDate.getDate() + shelfLifeDays);
+  return { ...crop, shelfLifeDays, expiresAt: baseDate.toISOString() };
+}
+
 let directOrders = [
   {
     id: 'ord-101',
@@ -272,7 +299,7 @@ let directOrders = [
 ];
 
 // SIH26033: Merchant Offers, Bidding, Transport Management & Two-Side Verification
-let merchantOffers = [
+let merchantOffers: any[] = [
   {
     id: 'off-101',
     cropId: 'crop-1',
@@ -471,6 +498,19 @@ const intermediaryLayers = [
 
 const mandiComparisons = [
   {
+    cropName: 'Dhule Fresh Onion',
+    cropNameHindi: 'धुले ताजा प्याज',
+    state: 'Maharashtra',
+    district: 'Dhule',
+    apmcFarmerPrice: 12,
+    middlemenCost: 19,
+    retailStorePrice: 42,
+    directFarmerPrice: 26,
+    directConsumerPrice: 30,
+    farmerGainPercent: 117,
+    consumerSavingsPercent: 29,
+  },
+  {
     cropName: 'Nashik Red Onion',
     cropNameHindi: 'नासिक लाल प्याज',
     state: 'Maharashtra',
@@ -564,7 +604,13 @@ app.get('/api/health', (req, res) => {
 // 2. Get all crop listings
 app.get('/api/crops', (req, res) => {
   const { category, search, state } = req.query;
-  let filtered = [...cropListings];
+  let filtered = cropListings.map(addLifecycleData);
+  const role = String(req.headers['x-role'] || '');
+  const username = String(req.headers['x-username'] || '');
+
+  if (role === 'farmer' && username) {
+    filtered = filtered.filter((crop) => crop.farmerUsername === username);
+  }
 
   if (category && category !== 'All') {
     filtered = filtered.filter((c) => c.category.toLowerCase() === (category as string).toLowerCase());
@@ -621,6 +667,8 @@ app.post('/api/crops', (req, res) => {
     mandiApmcPricePerUnit: mandiPrice,
     retailMarketPricePerUnit: retailPrice,
     harvestDate: data.harvestDate || new Date().toISOString().split('T')[0],
+    shelfLifeDays: getShelfLifeDays(data),
+    farmerUsername: data.farmerUsername || String(req.headers['x-username'] || ''),
     farmingType: data.farmingType || 'Natural (प्राकृतिक)',
     grade: data.grade || 'Grade A (उत्तम)',
     imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
@@ -634,15 +682,57 @@ app.post('/api/crops', (req, res) => {
   res.status(201).json(newCrop);
 });
 
-// 4. Delete crop listing
+// 4. Update crop listing (Farmer action)
+app.put('/api/crops/:id', (req, res) => {
+  const crop = cropListings.find((item) => item.id === req.params.id);
+  if (!crop) {
+    return res.status(404).json({ error: 'Crop listing not found' });
+  }
+
+  const data = req.body;
+  const username = String(req.headers['x-username'] || '');
+  if (String(req.headers['x-role'] || '') === 'farmer' && (crop as any).farmerUsername !== username) {
+    return res.status(403).json({ error: 'You can only edit your own crop listings.' });
+  }
+  if (!data.cropName || !data.farmerName || !data.farmerPricePerUnit) {
+    return res.status(400).json({ error: 'Missing required crop details (name, farmer, price)' });
+  }
+
+  Object.assign(crop, {
+    ...data,
+    cropNameHindi: data.cropNameHindi || data.cropName,
+    quantityAvailable: Number(data.quantityAvailable) || crop.quantityAvailable,
+    minOrderQuantity: Number(data.minOrderQuantity) || crop.minOrderQuantity,
+    farmerPricePerUnit: Number(data.farmerPricePerUnit),
+    mandiApmcPricePerUnit: Number(data.mandiApmcPricePerUnit) || Math.round(Number(data.farmerPricePerUnit) * 0.55),
+    retailMarketPricePerUnit: Number(data.retailMarketPricePerUnit) || Math.round(Number(data.farmerPricePerUnit) * 1.55),
+    updatedAt: new Date().toISOString(),
+    shelfLifeDays: getShelfLifeDays(data),
+  });
+
+  res.json(addLifecycleData(crop));
+});
+
+// 5. Delete crop listing
 app.delete('/api/crops/:id', (req, res) => {
   const { id } = req.params;
+  const crop = cropListings.find((item) => item.id === id);
+  const username = String(req.headers['x-username'] || '');
+  if (!crop) return res.status(404).json({ error: 'Crop listing not found' });
+  if (String(req.headers['x-role'] || '') === 'farmer' && (crop as any).farmerUsername !== username) {
+    return res.status(403).json({ error: 'You can only delete your own crop listings.' });
+  }
   cropListings = cropListings.filter((c) => c.id !== id);
   res.json({ success: true, message: 'Crop listing removed' });
 });
 
 // 5. Get orders
 app.get('/api/orders', (req, res) => {
+  const role = String(req.headers['x-role'] || '');
+  const username = String(req.headers['x-username'] || '');
+  if (role === 'farmer' && username) {
+    return res.json(directOrders.filter((order) => (order as any).farmerUsername === username));
+  }
   res.json(directOrders);
 });
 
@@ -667,6 +757,7 @@ app.post('/api/orders', (req, res) => {
     cropName: crop.cropName,
     farmerName: crop.farmerName,
     farmerPhone: crop.farmerPhone,
+    farmerUsername: (crop as any).farmerUsername,
     buyerName: data.buyerName,
     buyerPhone: data.buyerPhone || '+91 99999 99999',
     buyerAddress: data.buyerAddress || 'City delivery point',
@@ -793,6 +884,15 @@ app.post('/api/ai-advisory', async (req, res) => {
 app.get('/api/offers', (req, res) => {
   const { cropId, merchantId, status } = req.query;
   let filtered = [...merchantOffers];
+  const role = String(req.headers['x-role'] || '');
+  const username = String(req.headers['x-username'] || '');
+
+  if (role === 'merchant' && username) {
+    filtered = filtered.filter((offer) => offer.merchantId === username || (username === 'merchant' && offer.merchantId === 'mer-1'));
+  }
+  if (role === 'farmer' && username) {
+    filtered = filtered.filter((offer) => offer.farmerUsername === username);
+  }
 
   if (cropId) {
     filtered = filtered.filter((o) => o.cropId === cropId);
@@ -821,7 +921,13 @@ app.post('/api/offers', (req, res) => {
 
   const offeredRate = Number(data.offeredPrice);
   const qty = Number(data.quantity);
-  const totalAmt = offeredRate * qty;
+  const productAmount = offeredRate * qty;
+  const fulfillmentType = data.fulfillmentType === 'delivery' ? 'delivery' : 'pickup';
+  const deliveryFee = fulfillmentType === 'delivery' ? Number(data.deliveryFee) || 0 : 0;
+  if (fulfillmentType === 'delivery' && !String(data.deliveryPlace || '').trim()) {
+    return res.status(400).json({ error: 'Delivery place is required.' });
+  }
+  const totalAmt = productAmount + deliveryFee;
   const dist = Number(data.distanceKm) || Math.floor(Math.random() * 40) + 10;
 
   // Determine if this is the best match (highest rate & reasonable distance)
@@ -837,16 +943,22 @@ app.post('/api/offers', (req, res) => {
     farmerPhone: crop.farmerPhone,
     farmerLocation: `${crop.location.village}, ${crop.location.district}, ${crop.location.state}`,
     farmerExpectedPrice: crop.farmerPricePerUnit,
-    merchantId: data.merchantId || `mer-${Date.now().toString().slice(-4)}`,
+    merchantId: data.merchantId || String(req.headers['x-username'] || `mer-${Date.now().toString().slice(-4)}`),
     merchantName: data.merchantName || 'City Fresh Merchant Co.',
     merchantOwner: data.merchantOwner || 'Verified Merchant',
     merchantPhone: data.merchantPhone || '+91 98900 12345',
     merchantLocation: data.merchantLocation || 'Regional APMC Sub-Mandi',
+    farmerUsername: (crop as any).farmerUsername,
     distanceKm: dist,
     offeredPrice: offeredRate,
     quantity: qty,
     unit: crop.unit,
-    totalAmount: totalAmt,
+    totalAmount: productAmount,
+    productAmount,
+    deliveryFee,
+    payableTotal: totalAmt,
+    fulfillmentType,
+    deliveryPlace: fulfillmentType === 'delivery' ? String(data.deliveryPlace).trim() : null,
     pickupDate: data.pickupDate || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
     notes: data.notes || 'Direct procurement. Merchant arranged transport.',
     transportResponsibility: 'Merchant Arranged (किसान के लिए शून्य परिवहन खर्च)',
@@ -1133,20 +1245,40 @@ app.post('/api/offers/:id/release-payment', (req, res) => {
     return res.status(404).json({ error: 'Offer not found' });
   }
 
+  const { paymentMethod, paymentProof, paymentNote } = req.body || {};
+  if (!['upi', 'offline'].includes(paymentMethod)) {
+    return res.status(400).json({ error: 'Choose UPI or offline payment.' });
+  }
+  if (paymentMethod === 'upi' && (!paymentProof || !String(paymentProof).startsWith('data:image/'))) {
+    return res.status(400).json({ error: 'Upload a UPI payment screenshot.' });
+  }
+  if (paymentMethod === 'offline' && !String(paymentNote || '').trim()) {
+    return res.status(400).json({ error: 'Enter the offline payment reference or receipt number.' });
+  }
+
   offer.paymentStatus = 'released_to_farmer';
   offer.transportStatus = 'delivered';
-  offer.payoutRef = `UPI-SETTLE-${Math.floor(1000000 + Math.random() * 9000000)}-KISON`;
+  offer.paymentMethod = paymentMethod;
+  offer.paymentProof = paymentProof || null;
+  offer.paymentNote = String(paymentNote || '').trim() || null;
+  offer.payoutRef = `${paymentMethod === 'upi' ? 'UPI' : 'OFFLINE'}-SETTLE-${Math.floor(1000000 + Math.random() * 9000000)}-KISON`;
+  offer.paidAt = new Date().toISOString();
 
   res.json({
-    message: 'Payment released successfully to farmer',
+    message: 'Payment recorded successfully for farmer',
     offer,
     payoutRef: offer.payoutRef,
     amount: offer.totalAmount,
-    settledAt: new Date().toISOString(),
+    paymentMethod: offer.paymentMethod,
+    paymentProof: offer.paymentProof,
+    paymentNote: offer.paymentNote,
+    settledAt: offer.paidAt,
   });
 });
 
 async function startServer() {
+  const port = await findAvailablePort(DEFAULT_PORT);
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1162,8 +1294,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌾 KisanSetu Server running on http://0.0.0.0:${PORT}`);
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`🌾 KisanSetu Server running on http://0.0.0.0:${port}`);
   });
 }
 

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { MakeOfferModal } from './MakeOfferModal.jsx';
 import { TwoSideVerificationModal } from './TwoSideVerificationModal.jsx';
+import { isCropExpired } from '../data/produceLifecycle.js';
 
 export function MerchantPortal({
   crops,
@@ -29,6 +30,7 @@ export function MerchantPortal({
   onUpdateTransport,
   onVerifyImage,
   onReleasePayment,
+  merchantUsername,
   language
 }) {
   const [activeTab, setActiveTab] = useState('browse'); // 'browse' | 'my-deals' | 'transport'
@@ -39,6 +41,7 @@ export function MerchantPortal({
 
   // Filter crops available for merchant procurement
   const filteredCrops = crops.filter((crop) => {
+    if (isCropExpired(crop)) return false;
     const matchesSearch = 
       crop.cropName.toLowerCase().includes(searchCrop.toLowerCase()) ||
       crop.cropNameHindi?.toLowerCase().includes(searchCrop.toLowerCase()) ||
@@ -48,7 +51,7 @@ export function MerchantPortal({
   });
 
   // Merchant's own deals
-  const myOffers = offers.filter((o) => o.merchantId === merchantInfo.id || !o.merchantId || o.merchantId === 'mer-1');
+  const myOffers = offers.filter((o) => o.merchantId === merchantUsername || (merchantUsername === 'merchant' && o.merchantId === 'mer-1'));
   const acceptedOffers = myOffers.filter((o) => o.status === 'accepted');
   const pendingOffers = myOffers.filter((o) => o.status === 'pending');
   const deliveredOffers = myOffers.filter((o) => o.transportStatus === 'delivered' || o.paymentStatus === 'released_to_farmer');
@@ -162,7 +165,7 @@ export function MerchantPortal({
           </div>
 
           {/* Crops Grid for Merchants */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filteredCrops.map((crop) => {
               const pendingOffersForThisCrop = offers.filter((o) => o.cropId === crop.id && o.status === 'pending');
               const hasMyOffer = myOffers.some((o) => o.cropId === crop.id);
@@ -367,7 +370,8 @@ export function MerchantPortal({
                       </div>
                       <div>
                         <span className="text-[10px] text-emerald-700 font-bold block uppercase">कुल सौदा राशि</span>
-                        <span className="text-base font-black text-emerald-950">₹{offer.totalAmount.toLocaleString('en-IN')}</span>
+                        <span className="text-base font-black text-emerald-950">₹{(offer.payableTotal || offer.totalAmount).toLocaleString('en-IN')}</span>
+                        {offer.deliveryFee > 0 && <span className="block text-[10px] text-amber-700 font-bold">Delivery: ₹{offer.deliveryFee.toLocaleString('en-IN')}</span>}
                       </div>
                       <div>
                         <span className="text-[10px] text-emerald-700 font-bold block uppercase">दूरी (Distance)</span>
@@ -387,6 +391,14 @@ export function MerchantPortal({
                         <span className="text-[11px] font-bold bg-amber-200 text-amber-950 px-2.5 py-0.5 rounded-full">
                           स्थिति: {offer.transportStatus?.replace(/_/g, ' ') || 'Pending'}
                         </span>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-amber-200 text-xs space-y-1">
+                        <p className="font-black text-amber-950">
+                          तरीका: {offer.fulfillmentType === 'delivery' ? 'Delivery to merchant place' : 'Farm pickup'}
+                        </p>
+                        {offer.fulfillmentType === 'delivery' && <p className="text-amber-800 font-semibold">जगह: {offer.deliveryPlace}</p>}
+                        <p className="text-amber-800 font-semibold">कुल भुगतान: ₹{(offer.payableTotal || offer.totalAmount).toLocaleString('en-IN')} (फसल ₹{(offer.productAmount || offer.totalAmount).toLocaleString('en-IN')} + डिलीवरी ₹{(offer.deliveryFee || 0).toLocaleString('en-IN')})</p>
                       </div>
 
                       {offer.transportDetails ? (

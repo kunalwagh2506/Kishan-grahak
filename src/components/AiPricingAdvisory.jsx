@@ -14,7 +14,7 @@ export function AiPricingAdvisory({ language }) {
 
   const [cropName, setCropName] = useState('Red Onion (प्याज)');
   const [quantity, setQuantity] = useState(1500);
-  const [district, setDistrict] = useState('Nashik');
+  const [district, setDistrict] = useState('Dhule');
   const [state, setState] = useState('Maharashtra');
   const [currentOfferPrice, setCurrentOfferPrice] = useState(13);
 

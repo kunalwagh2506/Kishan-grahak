@@ -18,6 +18,7 @@ import {
   Phone
 } from 'lucide-react';
 import { translations } from '../data/translations.js';
+import { formatCropExpiry, getShelfLifeDays, isCropExpired } from '../data/produceLifecycle.js';
 
 export function FarmerDashboard({
   crops,
@@ -27,12 +28,17 @@ export function FarmerDashboard({
   onRejectOffer,
   onOpenListingModal,
   onDeleteCrop,
+  onEditCrop,
+  farmerUsername,
   language,
 }) {
   const t = translations[language] || translations.en;
+  const [selectedProductId, setSelectedProductId] = React.useState(null);
 
   // Calculate statistics
-  const totalCropsCount = crops.length;
+  const activeCrops = crops.filter((crop) => !isCropExpired(crop));
+  const expiredCrops = crops.filter(isCropExpired);
+  const totalCropsCount = activeCrops.length;
   const totalStockKg = crops.reduce((acc, c) => acc + (c.unit === 'kg' ? c.quantityAvailable : c.quantityAvailable * 50), 0);
   const totalOrdersCount = orders.length;
   const totalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0);
@@ -42,11 +48,12 @@ export function FarmerDashboard({
 
   const pendingOffers = offers.filter((o) => o.status === 'pending');
   const acceptedOffers = offers.filter((o) => o.status === 'accepted');
+  const profileCrop = crops.find((crop) => crop.farmerUsername === farmerUsername) || crops[0];
 
   return (
     <div className="space-y-6">
       {/* Top Banner with Stats - Vibrant Palette Theme */}
-      <div className="bg-white rounded-[36px] sm:rounded-[40px] p-6 sm:p-8 text-emerald-950 shadow-xl border-b-8 border-emerald-200">
+      <div id="farmer-profile" className="bg-white rounded-[36px] sm:rounded-[40px] p-6 sm:p-8 text-emerald-950 shadow-xl border-b-8 border-emerald-200 scroll-mt-40">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border border-emerald-200">
@@ -70,6 +77,29 @@ export function FarmerDashboard({
             <Plus className="w-5 h-5 stroke-[3]" />
             <span>नई फसल की बिक्री डालें (Add New Crop)</span>
           </button>
+        </div>
+
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+            <Sprout className="w-7 h-7" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600">Kisan Profile</span>
+            <h2 className="text-lg font-black text-emerald-950 truncate">{profileCrop?.farmerName || farmerUsername || 'New Farmer'}</h2>
+            <p className="text-xs font-semibold text-emerald-700">
+              @{farmerUsername || 'farmer'} {profileCrop?.location ? `• ${profileCrop.location.village}, ${profileCrop.location.district}` : '• Add your first product to complete your profile'}
+            </p>
+          </div>
+          <div className="sm:ml-auto grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-xl bg-white border border-emerald-200 px-3 py-2">
+              <strong className="block text-lg font-black text-emerald-950">{activeCrops.length}</strong>
+              <span className="text-[10px] font-bold text-emerald-700">Products listed</span>
+            </div>
+            <div className="rounded-xl bg-white border border-amber-200 px-3 py-2">
+              <strong className="block text-lg font-black text-amber-950">{pendingOffers.length}</strong>
+              <span className="text-[10px] font-bold text-amber-700">Buy requests</span>
+            </div>
+          </div>
         </div>
 
         {/* 4 Metric cards */}
@@ -106,12 +136,12 @@ export function FarmerDashboard({
 
           <div className="bg-amber-400 text-amber-950 p-4 rounded-2xl shadow-md border-b-4 border-amber-600">
             <span className="text-[11px] text-amber-950 font-bold block uppercase tracking-wider">
-              दलालों से बचाया शुद्ध लाभ
+              किसान की अतिरिक्त सीधी कमाई
             </span>
             <span className="text-2xl font-black text-amber-950 mt-1 block">
               +₹{estimatedExtraProfit.toLocaleString('en-IN')}
             </span>
-            <span className="text-[11px] text-amber-900 font-black">+45% Extra Income</span>
+            <span className="text-[11px] text-amber-900 font-black">दलाल के भाव से अधिक लाभ</span>
           </div>
         </div>
       </div>
@@ -220,6 +250,7 @@ export function FarmerDashboard({
                       <div>
                         <span className="text-[10px] text-amber-800 font-bold block uppercase">कुल सौदा राशि</span>
                         <span className="text-lg font-black text-amber-950">₹{offer.totalAmount.toLocaleString('en-IN')}</span>
+                        {offer.deliveryFee > 0 && <span className="block text-[10px] text-amber-700 font-bold">Delivery fee: ₹{offer.deliveryFee.toLocaleString('en-IN')}</span>}
                       </div>
                     </div>
 
@@ -291,7 +322,10 @@ export function FarmerDashboard({
                         {isPaid ? (
                           <span className="bg-emerald-700 text-white font-black px-3 py-1 rounded-lg flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                            ₹{offer.totalAmount.toLocaleString('en-IN')} UPI से प्राप्त हुआ!
+                            ₹{offer.totalAmount.toLocaleString('en-IN')} {offer.paymentMethod === 'offline' ? 'ऑफलाइन भुगतान से' : 'UPI से'} प्राप्त हुआ!
+                            <span className="block text-[10px] font-medium text-emerald-100">
+                              Ref: {offer.paymentMethod === 'offline' ? offer.paymentNote : offer.payoutRef}
+                            </span>
                           </span>
                         ) : (
                           <span className="text-amber-800 font-bold flex items-center gap-1">
@@ -310,7 +344,7 @@ export function FarmerDashboard({
       </div>
 
       {/* Active Listings Table / Cards */}
-      <div className="bg-white rounded-[32px] p-6 sm:p-8 border-b-8 border-emerald-200 shadow-xl space-y-4">
+      <div id="farmer-products" className="bg-white rounded-[32px] p-6 sm:p-8 border-b-8 border-emerald-200 shadow-xl space-y-4 scroll-mt-40">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black text-emerald-950">
@@ -329,10 +363,12 @@ export function FarmerDashboard({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {crops.map((crop) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {activeCrops.map((crop) => {
             const gainPerKg = crop.farmerPricePerUnit - crop.mandiApmcPricePerUnit;
             const extraPercent = Math.round((gainPerKg / crop.mandiApmcPricePerUnit) * 100);
+            const cropOffers = offers.filter((offer) => offer.cropId === crop.id);
+            const isProductSelected = selectedProductId === crop.id;
 
             return (
               <div
@@ -383,26 +419,102 @@ export function FarmerDashboard({
                     <span>उपलब्ध: <strong className="text-emerald-950 font-black">{crop.quantityAvailable} {crop.unit}</strong></span>
                     <span>स्थान: <strong className="text-emerald-950 font-black">{crop.location.district}</strong></span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductId(isProductSelected ? null : crop.id)}
+                    className={`w-full mb-2 rounded-xl px-3 py-2 text-xs font-black flex items-center justify-between border cursor-pointer ${isProductSelected ? 'bg-amber-400 text-amber-950 border-amber-500' : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'}`}
+                  >
+                    <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> People applied to buy</span>
+                    <span className="rounded-full bg-white/70 px-2 py-0.5">{cropOffers.length}</span>
+                  </button>
+
+                  {isProductSelected && (
+                    <div className="mb-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 space-y-2">
+                      {cropOffers.length === 0 ? (
+                        <p className="text-[11px] font-bold text-amber-800">No merchant has applied for this product yet.</p>
+                      ) : cropOffers.map((offer) => (
+                        <div key={offer.id} className="flex items-center justify-between gap-2 rounded-lg bg-white border border-amber-200 px-2.5 py-2 text-[11px]">
+                          <span className="font-black text-emerald-950 truncate">{offer.merchantName || 'Merchant'}</span>
+                          <span className="font-bold text-amber-800 whitespace-nowrap">₹{offer.offeredPrice}/{offer.unit} • {offer.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1.5 mb-2">
+                    ताजगी अवधि: {getShelfLifeDays(crop)} दिन • बिक्री समाप्त: {formatCropExpiry(crop)}
+                  </div>
                 </div>
 
-                <div className="pt-2 border-t border-emerald-100 flex items-center justify-between">
+                <div className="pt-2 border-t border-emerald-100 flex items-center justify-between gap-2">
                   <span className="text-[11px] text-stone-400 font-bold">
                     ID: #{crop.id.slice(-6)}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteCrop(crop.id)}
-                    className="text-rose-600 hover:text-rose-700 text-xs font-black flex items-center gap-1 p-1 cursor-pointer"
-                    title="Remove listing"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>हटाएं</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEditCrop(crop)}
+                      className="text-emerald-700 hover:text-emerald-900 text-xs font-black p-1 cursor-pointer"
+                      title="Edit listing"
+                    >
+                      संपादित करें
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteCrop(crop.id)}
+                      className="text-rose-600 hover:text-rose-700 text-xs font-black flex items-center gap-1 p-1 cursor-pointer"
+                      title="Remove listing"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>हटाएं</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
+
+      <div className="bg-stone-100 rounded-[32px] p-6 sm:p-8 border-b-8 border-stone-300 shadow-xl space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black text-stone-900">डंप ज़ोन (Expired Products)</h2>
+            <p className="text-xs text-stone-600 font-semibold">
+              इन फसलों की shelf life पूरी हो गई है। ये खरीदारों और व्यापारियों को नहीं दिखतीं।
+            </p>
+          </div>
+          <span className="bg-stone-200 text-stone-800 px-3 py-1.5 rounded-xl text-xs font-black">
+            {expiredCrops.length} expired
+          </span>
+        </div>
+
+        {expiredCrops.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-5 text-center text-xs font-bold text-stone-500">
+            अभी कोई expired product नहीं है।
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {expiredCrops.map((crop) => (
+              <div key={crop.id} className="bg-white rounded-2xl border border-stone-300 p-4 flex items-center gap-3">
+                <img src={crop.imageUrl} alt={crop.cropName} className="w-14 h-14 rounded-xl object-cover grayscale" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-black text-stone-900 truncate">{crop.cropName}</h3>
+                  <p className="text-[11px] text-rose-700 font-bold">Expired: {formatCropExpiry(crop)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onDeleteCrop(crop.id)}
+                  className="text-rose-700 hover:text-rose-900 text-xs font-black flex items-center gap-1 p-1 cursor-pointer"
+                  title="Delete expired product"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  हटाएं
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

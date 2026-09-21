@@ -49,6 +49,10 @@ export function TwoSideVerificationModal({
   const [verificationData, setVerificationData] = useState(offer.twoSideVerification || null);
   const [paymentSuccess, setPaymentSuccess] = useState(offer.paymentStatus === 'released_to_farmer');
   const [settlementRef, setSettlementRef] = useState(offer.payoutRef || null);
+  const [paymentMethod, setPaymentMethod] = useState(offer.paymentMethod || 'upi');
+  const [paymentProof, setPaymentProof] = useState(offer.paymentProof || '');
+  const [paymentNote, setPaymentNote] = useState(offer.paymentNote || '');
+  const [paymentError, setPaymentError] = useState('');
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -59,6 +63,14 @@ export function TwoSideVerificationModal({
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handlePaymentProofUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPaymentProof(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const runAiVerification = async () => {
@@ -76,12 +88,26 @@ export function TwoSideVerificationModal({
   };
 
   const handlePayFarmer = async () => {
+    setPaymentError('');
+    if (paymentMethod === 'upi' && !paymentProof.startsWith('data:image/')) {
+      setPaymentError('Upload the UPI payment screenshot before completing payment.');
+      return;
+    }
+    if (paymentMethod === 'offline' && !paymentNote.trim()) {
+      setPaymentError('Enter the offline receipt or payment reference number.');
+      return;
+    }
     setPaying(true);
     try {
-      const res = await onReleasePayment(offer.id);
+      const res = await onReleasePayment(offer.id, {
+        paymentMethod,
+        paymentProof: paymentMethod === 'upi' ? paymentProof : null,
+        paymentNote: paymentMethod === 'offline' ? paymentNote.trim() : '',
+      });
       if (res && res.payoutRef) {
         setPaymentSuccess(true);
         setSettlementRef(res.payoutRef);
+        setPaymentMethod(res.paymentMethod || paymentMethod);
       }
     } catch (err) {
       console.error(err);
@@ -319,6 +345,9 @@ export function TwoSideVerificationModal({
                     ({offer.quantity} {offer.unit} @ ₹{offer.offeredPrice}/{offer.unit})
                   </span>
                 </div>
+                <p className="text-xs text-emerald-200 mt-2">
+                  Merchant payable: ₹{(offer.payableTotal || offer.totalAmount)?.toLocaleString('en-IN')} (produce ₹{(offer.productAmount || offer.totalAmount)?.toLocaleString('en-IN')} + delivery ₹{(offer.deliveryFee || 0).toLocaleString('en-IN')})
+                </p>
                 <p className="text-xs text-emerald-300 mt-1">
                   किसान: <strong>{offer.farmerName}</strong> • फोन: {offer.farmerPhone}
                 </p>
@@ -329,23 +358,16 @@ export function TwoSideVerificationModal({
                   <CheckCircle2 className="w-5 h-5 text-amber-300" />
                   <div>
                     <span>भुगतान संपन्न (Paid to Farmer)</span>
+                    <span className="block text-[10px] text-emerald-200">
+                      {paymentMethod === 'upi' ? 'UPI screenshot verified' : 'Offline payment recorded'}
+                    </span>
                     <span className="block text-[10px] font-mono text-amber-300">
                       Ref: {settlementRef}
                     </span>
                   </div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handlePayFarmer}
-                  disabled={paying || !verificationData}
-                  className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black px-6 py-3 rounded-xl text-xs sm:text-sm shadow-lg border-b-4 border-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  <IndianRupee className="w-4 h-4 stroke-[3]" />
-                  <span>
-                    {paying ? 'UPI भुगतान जारी हो रहा है...' : 'किसान को तुरंत भुगतान करें (Release Payment)'}
-                  </span>
-                </button>
+                <span className="text-xs text-amber-200">नीचे भुगतान तरीका चुनकर प्रमाण जोड़ें</span>
               )}
             </div>
 
@@ -353,6 +375,45 @@ export function TwoSideVerificationModal({
               <p className="text-[11px] text-amber-300 font-medium">
                 * कृपया भुगतान जारी करने से पहले ऊपर 'AI सत्यापन चलाएं' पर क्लिक करें।
               </p>
+            )}
+
+            {!paymentSuccess && (
+              <div className="border-t border-emerald-700 pt-4 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => { setPaymentMethod('upi'); setPaymentError(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${paymentMethod === 'upi' ? 'bg-amber-400 text-emerald-950 border-amber-500' : 'bg-emerald-900 text-emerald-100 border-emerald-600'}`}>
+                    UPI screenshot
+                  </button>
+                  <button type="button" onClick={() => { setPaymentMethod('offline'); setPaymentError(''); }} className={`px-3 py-2 rounded-xl text-xs font-black border ${paymentMethod === 'offline' ? 'bg-amber-400 text-emerald-950 border-amber-500' : 'bg-emerald-900 text-emerald-100 border-emerald-600'}`}>
+                    Offline payment
+                  </button>
+                </div>
+
+                {paymentMethod === 'upi' ? (
+                  <label className="flex items-center justify-between gap-3 rounded-xl border border-emerald-600 bg-emerald-900 px-3 py-2 text-xs font-bold text-emerald-100 cursor-pointer">
+                    <span>{paymentProof ? 'UPI proof attached' : 'Upload UPI payment screenshot'}</span>
+                    <Upload className="w-4 h-4 text-amber-300" />
+                    <input type="file" accept="image/*" onChange={handlePaymentProofUpload} className="hidden" />
+                  </label>
+                ) : (
+                  <input
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    placeholder="Offline receipt / transaction reference"
+                    className="w-full rounded-xl border border-emerald-600 bg-emerald-900 px-3 py-2 text-xs font-bold text-white placeholder:text-emerald-300 focus:outline-none focus:border-amber-400"
+                  />
+                )}
+
+                {paymentError && <p className="text-xs font-bold text-rose-300">{paymentError}</p>}
+                <button
+                  type="button"
+                  onClick={handlePayFarmer}
+                  disabled={paying || !verificationData}
+                  className="w-full bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black px-6 py-3 rounded-xl text-xs sm:text-sm shadow-lg border-b-4 border-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <IndianRupee className="w-4 h-4 stroke-[3]" />
+                  <span>{paying ? 'Payment confirmation saving...' : 'Mark payment complete'}</span>
+                </button>
+              </div>
             )}
           </div>
         </div>

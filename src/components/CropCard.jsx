@@ -7,14 +7,17 @@ import {
   MessageCircle, 
   Volume2, 
   TrendingUp, 
-  ShoppingBag
+  ShoppingBag,
+  Handshake
 } from 'lucide-react';
 import { translations } from '../data/translations.js';
+import { formatCropExpiry, getShelfLifeDays } from '../data/produceLifecycle.js';
 
 export function CropCard({
   crop,
   language,
   onSelectCropForOrder,
+  onProposeHamiBhaw,
 }) {
   const t = translations[language] || translations.en;
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -171,6 +174,9 @@ export function CropCard({
               Min Order: <strong className="text-emerald-950 font-black">{crop.minOrderQuantity} {crop.unit}</strong>
             </span>
           </div>
+          <div className="mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-800">
+            Fresh for {getShelfLifeDays(crop)} days • Expires {formatCropExpiry(crop)}
+          </div>
         </div>
       </div>
 
@@ -186,6 +192,18 @@ export function CropCard({
           <ShoppingBag className="w-4 h-4" />
           <span>{t.buyDirectBtn}</span>
         </button>
+
+        {crop.hamiBhawEnabled && onProposeHamiBhaw && (
+          <button
+            id={`hami-bhaw-${crop.id}`}
+            type="button"
+            onClick={() => onProposeHamiBhaw(crop)}
+            className="w-full border-2 border-amber-300 bg-amber-50 text-amber-950 font-black py-2.5 px-4 rounded-2xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Handshake className="w-4 h-4" />
+            <span>Propose Hami Bhaw</span>
+          </button>
+        )}
 
         {/* Peer to Peer direct connect */}
         <div className="grid grid-cols-2 gap-2">

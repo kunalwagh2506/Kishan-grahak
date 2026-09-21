@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   X, 
   Sprout, 
@@ -33,7 +33,10 @@ export function FarmerListingModal({
   isOpen,
   onClose,
   onAddCrop,
+  onUpdateCrop,
+  editingCrop,
   language,
+  farmerUsername,
 }) {
   const t = translations[language] || translations.en;
 
@@ -48,6 +51,9 @@ export function FarmerListingModal({
   const [quantity, setQuantity] = useState(500);
   const [unit, setUnit] = useState('kg');
   const [minOrder, setMinOrder] = useState(10);
+  const [hamiBhawEnabled, setHamiBhawEnabled] = useState(false);
+  const [minAcceptablePrice, setMinAcceptablePrice] = useState(25);
+  const [minNegotiationOrderQuantity, setMinNegotiationOrderQuantity] = useState(10);
   const [farmerPrice, setFarmerPrice] = useState(25);
   const [mandiPrice, setMandiPrice] = useState(12);
   const [retailPrice, setRetailPrice] = useState(40);
@@ -59,6 +65,59 @@ export function FarmerListingModal({
   const [isListening, setIsListening] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isAiScanning, setIsAiScanning] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!editingCrop) {
+      setCropName('');
+      setVariety('');
+      setCategory('Vegetables');
+      setFarmerName('');
+      setFarmerPhone('');
+      setVillage('');
+      setDistrict('');
+      setState('Maharashtra');
+      setQuantity(500);
+      setUnit('kg');
+      setMinOrder(10);
+      setHamiBhawEnabled(false);
+      setMinAcceptablePrice(25);
+      setMinNegotiationOrderQuantity(10);
+      setFarmerPrice(25);
+      setMandiPrice(12);
+      setRetailPrice(40);
+      setFarmingType('Natural (प्राकृतिक)');
+      setGrade('Grade A (उत्तम)');
+      setUpiId('');
+      setImageUrl('https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=600&q=80');
+      setDescription('');
+      setAiAnalysis(null);
+      return;
+    }
+    setCropName(editingCrop.cropName || '');
+    setVariety(editingCrop.variety || '');
+    setCategory(editingCrop.category || 'Vegetables');
+    setFarmerName(editingCrop.farmerName || '');
+    setFarmerPhone(editingCrop.farmerPhone || '');
+    setVillage(editingCrop.location?.village || '');
+    setDistrict(editingCrop.location?.district || '');
+    setState(editingCrop.location?.state || 'Maharashtra');
+    setQuantity(editingCrop.quantityAvailable || 0);
+    setUnit(editingCrop.unit || 'kg');
+    setMinOrder(editingCrop.minOrderQuantity || 1);
+    setHamiBhawEnabled(Boolean(editingCrop.hamiBhawEnabled));
+    setMinAcceptablePrice(editingCrop.minAcceptablePrice || 25);
+    setMinNegotiationOrderQuantity(editingCrop.minNegotiationOrderQuantity || 10);
+    setFarmerPrice(editingCrop.farmerPricePerUnit || 25);
+    setMandiPrice(editingCrop.mandiApmcPricePerUnit || 12);
+    setRetailPrice(editingCrop.retailMarketPricePerUnit || 40);
+    setFarmingType(editingCrop.farmingType || 'Natural (प्राकृतिक)');
+    setGrade(editingCrop.grade || 'Grade A (उत्तम)');
+    setUpiId(editingCrop.upiId || '');
+    setImageUrl(editingCrop.imageUrl || '');
+    setDescription(editingCrop.description || '');
+    setAiAnalysis(null);
+  }, [isOpen, editingCrop]);
 
   if (!isOpen) return null;
 
@@ -167,7 +226,7 @@ export function FarmerListingModal({
       return;
     }
 
-    onAddCrop({
+    const cropData = {
       cropName,
       cropNameHindi: cropName,
       variety: variety || 'Desi Grade A',
@@ -181,6 +240,11 @@ export function FarmerListingModal({
       },
       quantityAvailable: Number(quantity),
       minOrderQuantity: Number(minOrder),
+      hamiBhawEnabled,
+      minAcceptablePrice: hamiBhawEnabled ? Number(minAcceptablePrice) : undefined,
+      minNegotiationOrderQuantity: hamiBhawEnabled ? Number(minNegotiationOrderQuantity) : undefined,
+      negotiationExpiryHours: 24,
+      farmerUsername,
       unit,
       farmerPricePerUnit: Number(farmerPrice),
       mandiApmcPricePerUnit: Number(mandiPrice) || Math.round(Number(farmerPrice) * 0.55),
@@ -190,7 +254,7 @@ export function FarmerListingModal({
       upiId: upiId || `${farmerName.toLowerCase().replace(/\s+/g, '')}@upi`,
       imageUrl,
       description: description || 'Fresh farm harvested produce. Zero chemical ripening.',
-      harvestDate: new Date().toISOString().split('T')[0],
+      harvestDate: editingCrop?.harvestDate || new Date().toISOString().split('T')[0],
       verifiedKisan: true,
       aiQualityScore: aiAnalysis?.qualityScore || 92,
       aiEstimatedGrade: aiAnalysis?.grade || grade,
@@ -200,7 +264,13 @@ export function FarmerListingModal({
         ? { min: aiAnalysis.suggestedPriceMin, max: aiAnalysis.suggestedPriceMax }
         : { min: Math.round(Number(farmerPrice) * 0.9), max: Math.round(Number(farmerPrice) * 1.1) },
       distanceKm: Math.floor(Math.random() * 25) + 12,
-    });
+    };
+
+    if (editingCrop && onUpdateCrop) {
+      onUpdateCrop(editingCrop.id, cropData);
+    } else {
+      onAddCrop(cropData);
+    }
 
     onClose();
   };
@@ -218,7 +288,7 @@ export function FarmerListingModal({
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black">
-                {t.listHarvestBtn}
+                {editingCrop ? 'फसल की जानकारी संपादित करें' : t.listHarvestBtn}
               </h2>
               <p className="text-xs text-emerald-200">
                 सीधा बेचें • बिना मंडी दलाली व बिना कमीशन
@@ -405,7 +475,7 @@ export function FarmerListingModal({
                   type="text"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="नासिक"
+                  placeholder="नासिक या धुले"
                   className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs"
                 />
               </div>
@@ -661,6 +731,24 @@ export function FarmerListingModal({
             )}
           </div>
 
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-3">
+            <label className="flex items-center gap-2 text-xs font-black text-amber-950">
+              <input type="checkbox" checked={hamiBhawEnabled} onChange={(e) => setHamiBhawEnabled(e.target.checked)} className="w-4 h-4 accent-amber-500" />
+              Enable Hami Bhaw (Negotiation)
+            </label>
+            {hamiBhawEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="text-xs font-bold text-amber-950">Minimum Acceptable Price (Private)
+                  <input type="number" min="1" value={minAcceptablePrice} onChange={(e) => setMinAcceptablePrice(Number(e.target.value))} className="mt-1 w-full px-3 py-2 rounded-xl border border-amber-300 bg-white" required />
+                </label>
+                <label className="text-xs font-bold text-amber-950">Minimum Negotiation Quantity ({unit})
+                  <input type="number" min={minOrder} value={minNegotiationOrderQuantity} onChange={(e) => setMinNegotiationOrderQuantity(Number(e.target.value))} className="mt-1 w-full px-3 py-2 rounded-xl border border-amber-300 bg-white" required />
+                </label>
+              </div>
+            )}
+            <p className="text-[11px] text-amber-800">This minimum price will never be displayed to buyers. Hami Bhaw is an internal peer-to-peer agreement, not an official MSP or mandi price.</p>
+          </div>
+
           {/* Description & Voice Dictation Assist */}
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -716,7 +804,7 @@ export function FarmerListingModal({
               className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 font-black py-3.5 px-6 rounded-2xl text-base shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Check className="w-5 h-5" />
-              <span>सीधी बिक्री के लिए लिस्ट करें (Publish Direct Listing)</span>
+              <span>{editingCrop ? 'फसल की जानकारी अपडेट करें (Update Product)' : 'सीधी बिक्री के लिए लिस्ट करें (Publish Direct Listing)'}</span>
             </button>
           </div>
         </form>
